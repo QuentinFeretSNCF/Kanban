@@ -1,4 +1,4 @@
-import type { PrioriteId, StatusId } from "./types";
+import type { DifficulteId, PrioriteId, StatusId } from "./types";
 
 export const STATUSES: { id: StatusId; label: string }[] = [
   { id: "backlog", label: "Backlog" },
@@ -21,6 +21,16 @@ export const PRIORITIES: { id: PrioriteId; label: string; color: string }[] = [
   { id: "haute", label: "Haute", color: "#D6462E" },
   { id: "moyenne", label: "Moyenne", color: "#C98A2B" },
   { id: "basse", label: "Basse", color: "#6E8378" },
+];
+
+export const DIFFICULTIES: { id: DifficulteId; label: string }[] = [
+  { id: "XS", label: "XS" },
+  { id: "S", label: "S" },
+  { id: "M", label: "M" },
+  { id: "L", label: "L" },
+  { id: "XL", label: "XL" },
+  { id: "XXL", label: "XXL" },
+  { id: "XXXL", label: "XXXL" },
 ];
 
 export const DESIGNER_COLORS = ["#2B4570", "#3D6B5C", "#A85A2E", "#6B4A82", "#1D7A73", "#8C3B4A"];

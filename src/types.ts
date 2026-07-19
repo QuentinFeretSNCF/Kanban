@@ -1,5 +1,6 @@
 export type StatusId = "backlog" | "cadrage" | "encours" | "revision" | "livre";
 export type PrioriteId = "haute" | "moyenne" | "basse";
+export type DifficulteId = "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL";
 
 export interface Designer {
   id: string;
@@ -13,12 +14,12 @@ export interface Project {
   color: string;
 }
 
-export interface Task {
+export interface TaskRow {
   id: string;
   titre: string;
   chef: string;
-  type: string;
-  designer_id: string | null;
+  types: string[];
+  difficulte: DifficulteId | null;
   projet_id: string | null;
   charge: number;
   date_livraison: string | null;
@@ -28,7 +29,29 @@ export interface Task {
   notes: string;
 }
 
-export type TaskDraft = Omit<Task, "id"> & { id?: string };
+export interface Subtask {
+  id: string;
+  task_id: string;
+  titre: string;
+  fait: boolean;
+  position: number;
+}
+
+export interface Meeting {
+  id: string;
+  designer_id: string;
+  sprint: string;
+  titre: string;
+  charge: number;
+}
+
+/** Une TaskRow enrichie côté client avec ses designers assignés et ses sous-tâches. */
+export interface Task extends TaskRow {
+  designer_ids: string[];
+  subtasks: Subtask[];
+}
+
+export type TaskDraft = Omit<TaskRow, "id"> & { id?: string; designer_ids: string[] };
 
 export interface Filters {
   designerId: string;

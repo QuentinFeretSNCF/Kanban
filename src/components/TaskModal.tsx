@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
-import type { Designer, PrioriteId, Project, StatusId, Task, TaskDraft } from "../types";
-import { PRIORITIES, STATUSES, TYPES } from "../constants";
+import type { Designer, DifficulteId, PrioriteId, Project, StatusId, Task, TaskDraft } from "../types";
+import { DIFFICULTIES, PRIORITIES, STATUSES, TYPES } from "../constants";
 import { sprintKeyFor, toISODate } from "../dateUtils";
+import { subtaskProgress } from "../capacity";
+import MultiSelect from "./MultiSelect";
+import { ProgressBar } from "./atoms";
 
 export default function TaskModal({
   initial,
@@ -12,6 +15,9 @@ export default function TaskModal({
   onClose,
   onSave,
   onDelete,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
 }: {
   initial: Task | null;
   designers: Designer[];
@@ -20,18 +26,25 @@ export default function TaskModal({
   onClose: () => void;
   onSave: (draft: TaskDraft) => void;
   onDelete: (id: string) => void;
+  onAddSubtask: (taskId: string, titre: string) => void;
+  onToggleSubtask: (id: string, fait: boolean) => void;
+  onDeleteSubtask: (id: string) => void;
 }) {
   const blank: TaskDraft = {
-    titre: "", chef: "", type: TYPES[0], designer_id: designers[0]?.id ?? null,
+    titre: "", chef: "", types: [], designer_ids: [], difficulte: null,
     projet_id: projects[0]?.id ?? null, charge: 1, date_livraison: toISODate(new Date()),
     sprint: null, priorite: "moyenne", statut: "backlog", notes: "",
   };
   const [form, setForm] = useState<TaskDraft>(initial ?? blank);
   const [addingProject, setAddingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+  const [newSubtask, setNewSubtask] = useState("");
   const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof TaskDraft>(k: K, v: TaskDraft[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const toggleIn = (k: "types" | "designer_ids", id: string) => {
+    setForm((f) => ({ ...f, [k]: f[k].includes(id) ? f[k].filter((x) => x !== id) : [...f[k], id] }));
+  };
 
   const confirmNewProject = async () => {
     const name = newProjectName.trim();
@@ -50,6 +63,15 @@ export default function TaskModal({
     await onSave({ ...form, sprint, id: initial?.id });
     setSaving(false);
   };
+
+  const addSubtask = () => {
+    const titre = newSubtask.trim();
+    if (!titre || !initial) return;
+    onAddSubtask(initial.id, titre);
+    setNewSubtask("");
+  };
+
+  const progress = initial ? subtaskProgress(initial) : null;
 
   return (
     <div className="studio-modal-overlay" onClick={onClose}>
@@ -72,20 +94,23 @@ export default function TaskModal({
             <input required value={form.chef} onChange={(e) => set("chef", e.target.value)} placeholder="Nom du chef de projet" />
           </label>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <label className="studio-field">
-              <span>Type de demande</span>
-              <select value={form.type} onChange={(e) => set("type", e.target.value)}>
-                {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </label>
-            <label className="studio-field">
-              <span>Designer assigné</span>
-              <select value={form.designer_id ?? ""} onChange={(e) => set("designer_id", e.target.value || null)}>
-                {designers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </label>
-          </div>
+          <label className="studio-field">
+            <span>Type(s) de demande</span>
+            <MultiSelect
+              options={TYPES.map((t) => ({ id: t, label: t }))}
+              selected={form.types}
+              onToggle={(id) => toggleIn("types", id)}
+            />
+          </label>
+
+          <label className="studio-field">
+            <span>Designer(s) assigné(s)</span>
+            <MultiSelect
+              options={designers.map((d) => ({ id: d.id, label: d.name, color: d.color }))}
+              selected={form.designer_ids}
+              onToggle={(id) => toggleIn("designer_ids", id)}
+            />
+          </label>
 
           <label className="studio-field">
             <span>Projet</span>
@@ -131,17 +156,66 @@ export default function TaskModal({
             </label>
           </div>
 
-          <label className="studio-field">
-            <span>Statut</span>
-            <select value={form.statut} onChange={(e) => set("statut", e.target.value as StatusId)}>
-              {STATUSES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-            </select>
-          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <label className="studio-field">
+              <span>Statut</span>
+              <select value={form.statut} onChange={(e) => set("statut", e.target.value as StatusId)}>
+                {STATUSES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </label>
+            <label className="studio-field">
+              <span>Difficulté</span>
+              <div className="studio-multiselect">
+                {DIFFICULTIES.map((d) => (
+                  <button
+                    type="button"
+                    key={d.id}
+                    className={`studio-multiselect-chip ${form.difficulte === d.id ? "active" : ""}`}
+                    onClick={() => set("difficulte", form.difficulte === d.id ? null : d.id as DifficulteId)}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </label>
+          </div>
 
           <label className="studio-field">
             <span>Notes (optionnel)</span>
             <textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Contexte, lien vers le brief..." />
           </label>
+
+          <div className="studio-field">
+            <span>Sous-tâches{progress && progress.total > 0 ? ` (${progress.done}/${progress.total})` : ""}</span>
+            {!initial ? (
+              <div className="studio-empty-col" style={{ padding: "8px 0" }}>Enregistre la tâche pour ajouter des sous-tâches.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {progress && progress.total > 0 && <ProgressBar pct={progress.pct} label={`${progress.pct}%`} />}
+                {initial.subtasks.slice().sort((a, b) => a.position - b.position).map((s) => (
+                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input type="checkbox" checked={s.fait} onChange={(e) => onToggleSubtask(s.id, e.target.checked)} />
+                    <span style={{ flex: 1, fontSize: 13, textDecoration: s.fait ? "line-through" : "none", color: s.fait ? "var(--ink-soft)" : "var(--ink)" }}>
+                      {s.titre}
+                    </span>
+                    <button type="button" className="studio-icon-btn" style={{ width: 24, height: 24 }} onClick={() => onDeleteSubtask(s.id)}>
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    placeholder="Nouvelle sous-tâche…"
+                    value={newSubtask}
+                    onChange={(e) => setNewSubtask(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSubtask(); } }}
+                    style={{ flex: 1 }}
+                  />
+                  <button type="button" className="studio-icon-btn" onClick={addSubtask}><Plus size={15} /></button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
             {initial ? (

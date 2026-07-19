@@ -110,6 +110,31 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 .studio-save-flag { position: fixed; bottom: 16px; right: 16px; background: #D6462E; color: #fff; font-size: 11.5px; padding: 8px 12px; border-radius: 8px; cursor: pointer; max-width: 320px; }
 
+.studio-chip-difficulty { background: var(--paper); color: var(--ink-soft); border: 1px solid var(--line); }
+
+.studio-multiselect { display: flex; flex-wrap: wrap; gap: 6px; }
+.studio-multiselect-chip { background: var(--paper); border: 1px solid var(--line); color: var(--ink-soft); font-size: 12px; padding: 6px 11px; border-radius: 999px; cursor: pointer; transition: all .12s ease; }
+.studio-multiselect-chip:hover { border-color: var(--accent); color: var(--ink); }
+.studio-multiselect-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+.studio-meeting-input { width: 46px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; padding: 2px 5px; font-size: 11px; font-family: var(--font-mono); color: var(--ink); }
+
+.studio-calendar-top { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.studio-calendar-top > .studio-panel:first-child { flex: 0 0 300px; }
+
+.studio-minical-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.studio-minical-weekday { text-align: center; font-size: 10px; color: var(--ink-soft); font-family: var(--font-mono); padding-bottom: 4px; }
+.studio-minical-day { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ink); border-radius: 6px; }
+.studio-minical-day.today { background: var(--accent-soft); font-weight: 700; color: var(--accent); }
+.studio-minical-badge { position: absolute; bottom: 2px; right: 2px; background: var(--accent); color: #fff; font-size: 8.5px; font-family: var(--font-mono); font-weight: 700; min-width: 13px; height: 13px; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 2px; }
+
+.studio-gantt-scroll { overflow-x: auto; }
+.studio-gantt { display: grid; grid-auto-rows: 26px; align-items: center; row-gap: 4px; column-gap: 2px; min-width: 640px; }
+.studio-gantt-corner { position: sticky; left: 0; background: var(--panel); }
+.studio-gantt-day-head { text-align: center; font-size: 9px; color: var(--ink-soft); font-family: var(--font-mono); }
+.studio-gantt-label { position: sticky; left: 0; background: var(--panel); font-size: 11.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
+.studio-gantt-bar { height: 18px; border-radius: 5px; border: 1px solid; display: flex; align-items: center; justify-content: flex-end; padding: 0 6px; }
+
 .studio-auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--paper); padding: 20px; }
 .studio-auth-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 32px; width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 .studio-auth-card h1 { font-family: var(--font-display); font-size: 20px; font-weight: 700; margin: 4px 0 0; color: var(--ink); }
