@@ -167,7 +167,20 @@ export default function App() {
   }, []);
 
   const saveTask = useCallback(async (draft: TaskDraft) => {
-    const { designer_ids, id, ...rest } = draft;
+    const { id, designer_ids } = draft;
+    const rest: Omit<TaskRow, "id"> = {
+      titre: draft.titre,
+      chef: draft.chef,
+      types: draft.types,
+      difficulte: draft.difficulte,
+      projet_id: draft.projet_id,
+      charge: draft.charge,
+      date_livraison: draft.date_livraison,
+      sprint: draft.sprint,
+      priorite: draft.priorite,
+      statut: draft.statut,
+      notes: draft.notes,
+    };
     if (id) {
       const { data, error } = await supabase.from("tasks").update(rest).eq("id", id).select().single();
       if (error) { setErrorMsg(error.message); return; }

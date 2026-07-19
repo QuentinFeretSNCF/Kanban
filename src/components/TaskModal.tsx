@@ -35,7 +35,11 @@ export default function TaskModal({
     projet_id: projects[0]?.id ?? null, charge: 1, date_livraison: toISODate(new Date()),
     sprint: null, priorite: "moyenne", statut: "backlog", notes: "",
   };
-  const [form, setForm] = useState<TaskDraft>(initial ?? blank);
+  const [form, setForm] = useState<TaskDraft>(() => {
+    if (!initial) return blank;
+    const { subtasks: _subtasks, ...draft } = initial;
+    return draft;
+  });
   const [addingProject, setAddingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newSubtask, setNewSubtask] = useState("");
