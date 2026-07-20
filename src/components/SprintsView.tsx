@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Users, X } from "lucide-react";
 import type { Designer, Meeting, Project, Task } from "../types";
 import { taskChargeForDesignerInSprint, meetingChargeForDesignerInSprint, effectiveCapacity } from "../capacity";
 import { addDays, getMonday, sprintLabel, toISODate } from "../dateUtils";
@@ -25,10 +25,17 @@ export default function SprintsView({
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-        <select className="studio-select-sm" value={projetFilter} onChange={(e) => setProjetFilter(e.target.value)}>
-          <option value="all">Tous les projets</option>
-          {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <select className="studio-select-sm" value={projetFilter} onChange={(e) => setProjetFilter(e.target.value)}>
+            <option value="all">Tous les projets</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          {projetFilter !== "all" && (
+            <button type="button" className="studio-btn-ghost studio-btn-reset" onClick={() => setProjetFilter("all")}>
+              <X size={13} /> Réinitialiser
+            </button>
+          )}
+        </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="studio-icon-btn" onClick={() => setOffset((o) => o - 1)}><ChevronLeft size={16} /></button>
           <button className="studio-icon-btn" onClick={() => setOffset((o) => o + 1)}><ChevronRight size={16} /></button>

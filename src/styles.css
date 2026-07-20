@@ -53,6 +53,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .studio-btn-primary:hover { opacity: .88; }
 .studio-btn-primary:disabled { opacity: .6; cursor: default; }
 .studio-btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 9px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.studio-btn-reset { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; font-size: 12.5px; color: var(--ink-soft); }
+.studio-btn-reset:hover { color: var(--ink); border-color: var(--accent); }
 .studio-btn-ghost-danger { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: none; color: #D6462E; font-size: 13px; font-weight: 500; cursor: pointer; padding: 9px 4px; }
 .studio-icon-btn { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); }
 .studio-icon-btn:hover { color: var(--ink); }

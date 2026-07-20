@@ -1,8 +1,10 @@
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { Designer, Filters, Project, StatusId, Task } from "../types";
 import { PRIORITIES, STATUSES } from "../constants";
 import { toISODate } from "../dateUtils";
 import TaskCard from "./TaskCard";
+
+const EMPTY_FILTERS: Filters = { designerId: "all", projetId: "all", priorite: "all", search: "" };
 
 export default function KanbanView({
   tasks, designers, projects, filters, setFilters, onEdit, onDrop, onDragStart,
@@ -24,6 +26,7 @@ export default function KanbanView({
     if (filters.search && !`${t.titre} ${t.chef}`.toLowerCase().includes(filters.search.toLowerCase())) return false;
     return true;
   });
+  const hasActiveFilters = filters.designerId !== "all" || filters.projetId !== "all" || filters.priorite !== "all" || filters.search !== "";
 
   return (
     <div>
@@ -48,6 +51,11 @@ export default function KanbanView({
           <option value="all">Toutes priorités</option>
           {PRIORITIES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
         </select>
+        {hasActiveFilters && (
+          <button type="button" className="studio-btn-ghost studio-btn-reset" onClick={() => setFilters(EMPTY_FILTERS)}>
+            <X size={13} /> Réinitialiser
+          </button>
+        )}
       </div>
 
       <div className="studio-board">
