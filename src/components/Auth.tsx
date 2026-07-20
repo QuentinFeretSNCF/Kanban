@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { supabase } from "../supabaseClient";
+import type { Theme } from "../theme";
+import ThemeToggle from "./ThemeToggle";
 
-export default function Auth() {
+export default function Auth({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
@@ -31,6 +33,9 @@ export default function Auth() {
 
   return (
     <div className="studio-auth-screen">
+      <div className="studio-auth-theme-toggle">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+      </div>
       <div className="studio-auth-card">
         <div className="studio-mark"><span>LS</span></div>
         <h1>Le Studio — Kanban</h1>

@@ -4,7 +4,9 @@ import { CalendarDays, FolderKanban, GripVertical, LayoutGrid, LogOut, Plus, Use
 import { supabase } from "./supabaseClient";
 import type { Designer, Filters, Meeting, Project, StatusId, Subtask, Task, TaskDraft, TaskRow } from "./types";
 import { PROJECT_COLORS } from "./constants";
+import { applyTheme, getInitialTheme, type Theme } from "./theme";
 import Auth from "./components/Auth";
+import ThemeToggle from "./components/ThemeToggle";
 import TaskModal from "./components/TaskModal";
 import KanbanView from "./components/KanbanView";
 import SprintsView from "./components/SprintsView";
@@ -34,6 +36,9 @@ function removeById<T extends { id: string }>(list: T[], id: string): T[] {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  useEffect(() => { applyTheme(theme); }, [theme]);
+
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
@@ -267,8 +272,10 @@ export default function App() {
     if (id) moveTask(id, statusId);
   };
 
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+
   if (authLoading) return <div className="studio-boot">Chargement…</div>;
-  if (!session) return <Auth />;
+  if (!session) return <Auth theme={theme} onToggleTheme={toggleTheme} />;
 
   return (
     <div className="studio-root">
@@ -297,6 +304,7 @@ export default function App() {
           <button className="studio-btn-primary" onClick={openNew}>
             <Plus size={15} /> Nouvelle demande
           </button>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <button className="studio-icon-btn" title={`Déconnecter ${session.user.email ?? ""}`} onClick={() => supabase.auth.signOut()}>
             <LogOut size={15} />
           </button>

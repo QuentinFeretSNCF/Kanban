@@ -135,7 +135,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .studio-gantt-label { position: sticky; left: 0; background: var(--panel); font-size: 11.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
 .studio-gantt-bar { height: 18px; border-radius: 5px; border: 1px solid; display: flex; align-items: center; justify-content: flex-end; padding: 0 6px; }
 
-.studio-auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--paper); padding: 20px; }
+.studio-auth-screen { position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--paper); padding: 20px; }
+.studio-auth-theme-toggle { position: absolute; top: 20px; right: 20px; }
 .studio-auth-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 32px; width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 .studio-auth-card h1 { font-family: var(--font-display); font-size: 20px; font-weight: 700; margin: 4px 0 0; color: var(--ink); }
 .studio-auth-card p { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; line-height: 1.5; }
