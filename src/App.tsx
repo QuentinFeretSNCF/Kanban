@@ -305,8 +305,8 @@ export default function App() {
             <Plus size={15} /> Nouvelle demande
           </button>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          <button className="studio-icon-btn" title={`Déconnecter ${session.user.email ?? ""}`} onClick={() => supabase.auth.signOut()}>
-            <LogOut size={15} />
+          <button className="studio-icon-btn-header" title={`Déconnecter ${session.user.email ?? ""}`} onClick={() => supabase.auth.signOut()}>
+            <LogOut size={16} />
           </button>
         </div>
       </div>

@@ -70,6 +70,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .studio-icon-btn { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); }
 .studio-icon-btn:hover { color: var(--ink); }
 
+.studio-icon-btn-header { background: var(--search-bg); border: 1px solid var(--accent); border-radius: 8px; width: 41px; height: 41px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--accent); flex-shrink: 0; }
+.studio-icon-btn-header:hover { opacity: .8; }
+
 .studio-toolbar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
 .studio-search { display: flex; align-items: center; gap: 8px; background: var(--search-bg); border: 1px solid var(--search-border); border-radius: 8px; padding: 8px 12px; flex: 1; min-width: 220px; }
 .studio-search input { border: none; background: transparent; outline: none; font-size: 14px; line-height: 1; width: 100%; }
