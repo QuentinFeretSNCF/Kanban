@@ -32,7 +32,7 @@ export default function KanbanView({
     <div>
       <div className="studio-toolbar">
         <div className="studio-search">
-          <Search size={14} color="var(--ink-soft)" />
+          <Search size={14} strokeWidth={1.5} color="var(--search-placeholder)" />
           <input
             placeholder="Rechercher une tâche ou un chef de projet…"
             value={filters.search}
