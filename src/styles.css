@@ -1,5 +1,5 @@
 :root {
-  --paper: #F2F1EC;
+  --paper: #FFFFFF;
   --panel: #FBFAF7;
   --ink: #211F1B;
   --ink-soft: #6B675F;
@@ -22,7 +22,7 @@
   --paper: #1B1A17; --panel: #232220; --ink: #EDEAE2; --ink-soft: #A8A399; --line: #3A3833; --accent: #D97CB8; --accent-soft: #3D2432; --tab-active-bg: #7A2E52; --brand-heading: #EDEAE2; --brand-subtitle: #A8A399;
 }
 :root[data-theme="light"] {
-  --paper: #F2F1EC; --panel: #FBFAF7; --ink: #211F1B; --ink-soft: #6B675F; --line: #DEDACE; --accent: #A1006B; --accent-soft: #F3E0EE; --tab-active-bg: #3E001A; --brand-heading: #333333; --brand-subtitle: #4D4F53;
+  --paper: #FFFFFF; --panel: #FBFAF7; --ink: #211F1B; --ink-soft: #6B675F; --line: #DEDACE; --accent: #A1006B; --accent-soft: #F3E0EE; --tab-active-bg: #3E001A; --brand-heading: #333333; --brand-subtitle: #4D4F53;
 }
 
 * { box-sizing: border-box; }
