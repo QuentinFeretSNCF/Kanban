@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { GripVertical, Plus, Trash2, X } from "lucide-react";
 import type { Designer, DifficulteId, PrioriteId, Project, StatusId, Task, TaskDraft } from "../types";
 import { DIFFICULTIES, PRIORITIES, STATUSES, TYPES } from "../constants";
 import { sprintKeyFor, toISODate } from "../dateUtils";
@@ -18,6 +18,7 @@ export default function TaskModal({
   onAddSubtask,
   onToggleSubtask,
   onDeleteSubtask,
+  onReorderSubtasks,
 }: {
   initial: Task | null;
   designers: Designer[];
@@ -29,6 +30,7 @@ export default function TaskModal({
   onAddSubtask: (taskId: string, titre: string) => void;
   onToggleSubtask: (id: string, fait: boolean) => void;
   onDeleteSubtask: (id: string) => void;
+  onReorderSubtasks: (orderedIds: string[]) => void;
 }) {
   const blank: TaskDraft = {
     titre: "", chef: "", types: [], designer_ids: [], difficulte: null,
@@ -44,6 +46,7 @@ export default function TaskModal({
   const [newProjectName, setNewProjectName] = useState("");
   const [newSubtask, setNewSubtask] = useState("");
   const [saving, setSaving] = useState(false);
+  const [draggedSubtaskId, setDraggedSubtaskId] = useState<string | null>(null);
 
   const set = <K extends keyof TaskDraft>(k: K, v: TaskDraft[K]) => setForm((f) => ({ ...f, [k]: v }));
   const toggleIn = (k: "types" | "designer_ids", id: string) => {
@@ -73,6 +76,18 @@ export default function TaskModal({
     if (!titre || !initial) return;
     onAddSubtask(initial.id, titre);
     setNewSubtask("");
+  };
+
+  const dropSubtask = (targetId: string) => {
+    if (!initial || !draggedSubtaskId || draggedSubtaskId === targetId) { setDraggedSubtaskId(null); return; }
+    const ordered = initial.subtasks.slice().sort((a, b) => a.position - b.position).map((s) => s.id);
+    const fromIndex = ordered.indexOf(draggedSubtaskId);
+    const toIndex = ordered.indexOf(targetId);
+    if (fromIndex === -1 || toIndex === -1) { setDraggedSubtaskId(null); return; }
+    ordered.splice(fromIndex, 1);
+    ordered.splice(toIndex, 0, draggedSubtaskId);
+    onReorderSubtasks(ordered);
+    setDraggedSubtaskId(null);
   };
 
   const progress = initial ? subtaskProgress(initial) : null;
@@ -197,7 +212,16 @@ export default function TaskModal({
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {progress && progress.total > 0 && <ProgressBar pct={progress.pct} label={`${progress.pct}%`} />}
                 {initial.subtasks.slice().sort((a, b) => a.position - b.position).map((s) => (
-                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    key={s.id}
+                    draggable
+                    onDragStart={() => setDraggedSubtaskId(s.id)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => dropSubtask(s.id)}
+                    onDragEnd={() => setDraggedSubtaskId(null)}
+                    style={{ display: "flex", alignItems: "center", gap: 8, opacity: draggedSubtaskId === s.id ? 0.5 : 1 }}
+                  >
+                    <GripVertical size={14} color="var(--line)" style={{ cursor: "grab", flexShrink: 0 }} />
                     <input type="checkbox" checked={s.fait} onChange={(e) => onToggleSubtask(s.id, e.target.checked)} />
                     <span style={{ flex: 1, fontSize: 13, textDecoration: s.fait ? "line-through" : "none", color: s.fait ? "var(--ink-soft)" : "var(--ink)" }}>
                       {s.titre}
