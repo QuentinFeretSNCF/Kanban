@@ -1,8 +1,10 @@
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { Designer, Filters, Project, StatusId, Task } from "../types";
 import { PRIORITIES, STATUSES } from "../constants";
 import { toISODate } from "../dateUtils";
 import TaskCard from "./TaskCard";
+
+const EMPTY_FILTERS: Filters = { designerId: "all", projetId: "all", priorite: "all", search: "" };
 
 export default function KanbanView({
   tasks, designers, projects, filters, setFilters, onEdit, onDrop, onDragStart,
@@ -18,18 +20,19 @@ export default function KanbanView({
 }) {
   const todayISO = toISODate(new Date());
   const filtered = tasks.filter((t) => {
-    if (filters.designerId !== "all" && t.designer_id !== filters.designerId) return false;
+    if (filters.designerId !== "all" && !t.designer_ids.includes(filters.designerId)) return false;
     if (filters.projetId !== "all" && t.projet_id !== filters.projetId) return false;
     if (filters.priorite !== "all" && t.priorite !== filters.priorite) return false;
     if (filters.search && !`${t.titre} ${t.chef}`.toLowerCase().includes(filters.search.toLowerCase())) return false;
     return true;
   });
+  const hasActiveFilters = filters.designerId !== "all" || filters.projetId !== "all" || filters.priorite !== "all" || filters.search !== "";
 
   return (
     <div>
       <div className="studio-toolbar">
         <div className="studio-search">
-          <Search size={14} color="var(--ink-soft)" />
+          <Search size={14} strokeWidth={1.5} color="var(--search-placeholder)" />
           <input
             placeholder="Rechercher une tâche ou un chef de projet…"
             value={filters.search}
@@ -48,6 +51,11 @@ export default function KanbanView({
           <option value="all">Toutes priorités</option>
           {PRIORITIES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
         </select>
+        {hasActiveFilters && (
+          <button type="button" className="studio-btn-ghost studio-btn-reset" onClick={() => setFilters(EMPTY_FILTERS)}>
+            <X size={13} /> Réinitialiser
+          </button>
+        )}
       </div>
 
       <div className="studio-board">
@@ -72,7 +80,7 @@ export default function KanbanView({
                   <TaskCard
                     key={t.id}
                     task={t}
-                    designer={designers.find((d) => d.id === t.designer_id)}
+                    designers={designers}
                     project={projects.find((p) => p.id === t.projet_id)}
                     onEdit={onEdit}
                     onDragStart={onDragStart}

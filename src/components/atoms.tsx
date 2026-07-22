@@ -1,4 +1,4 @@
-import type { Designer, Project, PrioriteId } from "../types";
+import type { Designer, DifficulteId, Project, PrioriteId } from "../types";
 import { PRIORITIES } from "../constants";
 
 export function Avatar({ designer, size = 28 }: { designer?: Designer | null; size?: number }) {
@@ -11,6 +11,22 @@ export function Avatar({ designer, size = 28 }: { designer?: Designer | null; si
       style={{ width: size, height: size, background: designer.color, fontSize: size * 0.38 }}
     >
       {initials}
+    </div>
+  );
+}
+
+export function AvatarStack({ designers, size = 22 }: { designers: (Designer | undefined)[]; size?: number }) {
+  const valid = designers.filter((d): d is Designer => !!d);
+  if (valid.length === 0) return null;
+  return (
+    <div style={{ display: "flex" }}>
+      {valid.map((d, i) => (
+        <div key={d.id} style={{ marginLeft: i === 0 ? 0 : -6, position: "relative", zIndex: valid.length - i }}>
+          <div style={{ borderRadius: "50%", boxShadow: "0 0 0 2px var(--card-bg)" }}>
+            <Avatar designer={d} size={size} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -31,4 +47,20 @@ export function ProjectTag({ project }: { project?: Project | null }) {
 export function PriorityDot({ id }: { id: PrioriteId }) {
   const p = PRIORITIES.find((x) => x.id === id) || PRIORITIES[1];
   return <span className="studio-dot" style={{ background: p.color }} />;
+}
+
+export function DifficultyBadge({ id }: { id?: DifficulteId | null }) {
+  if (!id) return null;
+  return <span className="studio-chip studio-chip-difficulty">{id}</span>;
+}
+
+export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div className="studio-bar-track" style={{ flex: 1 }}>
+        <div className="studio-bar-fill" style={{ width: `${pct}%`, background: "var(--accent)" }} />
+      </div>
+      {label && <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--ink-soft)", flexShrink: 0 }}>{label}</span>}
+    </div>
+  );
 }

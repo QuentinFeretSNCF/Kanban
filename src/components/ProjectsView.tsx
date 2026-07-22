@@ -46,7 +46,7 @@ export default function ProjectsView({
           const pTasks = tasks.filter((t) => t.projet_id === p.id);
           const active = pTasks.filter((t) => t.statut !== "livre");
           const charge = active.reduce((s, t) => s + (t.charge || 0), 0);
-          const involved = [...new Set(active.map((t) => t.designer_id))]
+          const involved = [...new Set(active.flatMap((t) => t.designer_ids))]
             .map((id) => designers.find((d) => d.id === id))
             .filter((d): d is Designer => !!d);
           return (
