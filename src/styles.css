@@ -115,7 +115,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .studio-sprint-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
 .studio-sprint-head { display: flex; justify-content: space-between; align-items: flex-start; }
 .studio-badge-current { font-size: 9.5px; font-weight: 700; background: var(--ink); color: var(--paper); padding: 3px 7px; border-radius: 5px; letter-spacing: 0.4px; }
-.studio-bar-track { height: 5px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.studio-bar-track { height: 6px; background: var(--surface-neutral); border: 1px solid var(--surface-neutral-border); border-radius: 4px; overflow: hidden; }
 .studio-bar-fill { height: 100%; border-radius: 4px; transition: width .2s ease; }
 .studio-sprint-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px; cursor: pointer; background: var(--paper); border: 1px solid var(--line); }
 .studio-sprint-row:hover { border-color: var(--accent); }

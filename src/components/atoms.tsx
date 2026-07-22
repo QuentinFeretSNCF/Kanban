@@ -56,11 +56,11 @@ export function DifficultyBadge({ id }: { id?: DifficulteId | null }) {
 
 export function ProgressBar({ pct, label }: { pct: number; label?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
       <div className="studio-bar-track" style={{ flex: 1 }}>
         <div className="studio-bar-fill" style={{ width: `${pct}%`, background: "var(--accent)" }} />
       </div>
-      {label && <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--ink-soft)", flexShrink: 0 }}>{label}</span>}
+      {label && <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink-soft)", flexShrink: 0 }}>{label}</span>}
     </div>
   );
 }

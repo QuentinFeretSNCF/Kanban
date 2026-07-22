@@ -239,6 +239,15 @@ export default function App() {
     else setSubtasks((cur) => removeById(cur, id));
   }, []);
 
+  const reorderSubtasks = useCallback(async (orderedIds: string[]) => {
+    const positionById = new Map(orderedIds.map((id, position) => [id, position]));
+    setSubtasks((cur) => cur.map((s) => (positionById.has(s.id) ? { ...s, position: positionById.get(s.id)! } : s)));
+    const { error } = await Promise.all(
+      orderedIds.map((id, position) => supabase.from("subtasks").update({ position }).eq("id", id))
+    ).then((results) => ({ error: results.find((r) => r.error)?.error ?? null }));
+    if (error) setErrorMsg(error.message);
+  }, []);
+
   const setMeetingCharge = useCallback(async (designerId: string, sprint: string, charge: number) => {
     const existing = meetings.find((m) => m.designer_id === designerId && m.sprint === sprint);
     if (charge <= 0) {
@@ -344,6 +353,7 @@ export default function App() {
           onAddSubtask={addSubtask}
           onToggleSubtask={toggleSubtask}
           onDeleteSubtask={deleteSubtask}
+          onReorderSubtasks={reorderSubtasks}
         />
       )}
 
