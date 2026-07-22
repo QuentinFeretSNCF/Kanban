@@ -21,8 +21,8 @@ export function AvatarStack({ designers, size = 22 }: { designers: (Designer | u
   return (
     <div style={{ display: "flex" }}>
       {valid.map((d, i) => (
-        <div key={d.id} style={{ marginLeft: i === 0 ? 0 : -size * 0.35, position: "relative", zIndex: valid.length - i }}>
-          <div style={{ borderRadius: "50%", boxShadow: "0 0 0 2px var(--panel)" }}>
+        <div key={d.id} style={{ marginLeft: i === 0 ? 0 : -6, position: "relative", zIndex: valid.length - i }}>
+          <div style={{ borderRadius: "50%", boxShadow: "0 0 0 2px var(--card-bg)" }}>
             <Avatar designer={d} size={size} />
           </div>
         </div>
