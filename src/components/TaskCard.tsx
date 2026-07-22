@@ -31,7 +31,7 @@ export default function TaskCard({
       onDragStart={(e) => onDragStart(e, task.id)}
       onClick={() => onEdit(task)}
       className="studio-card"
-      style={{ borderColor: prio.color }}
+      style={{ "--card-priority-color": prio.color } as React.CSSProperties}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div className="studio-card-title">{task.titre}</div>
