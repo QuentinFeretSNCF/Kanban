@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { TYPES } from "./constants";
 import { sprintKeyFor, toISODate } from "./dateUtils";
+import { createEstimatorState, type EstimatorState } from "./estimator";
+import Estimator from "./components/Estimator";
 
 interface Project {
   id: string;
@@ -22,6 +24,8 @@ export default function App() {
   const [types, setTypes] = useState<string[]>([]);
   const [dateLivraison, setDateLivraison] = useState(toISODate(new Date()));
   const [notes, setNotes] = useState("");
+  const [estimatorState, setEstimatorState] = useState<EstimatorState>(createEstimatorState);
+  const [estimatedCharge, setEstimatedCharge] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -39,12 +43,13 @@ export default function App() {
 
   const resetForm = () => {
     setTitre(""); setChef(""); setTypes([]); setDateLivraison(toISODate(new Date())); setNotes("");
+    setEstimatorState(createEstimatorState()); setEstimatedCharge(null);
     if (projects.length > 0) setProjetId(projects[0].id);
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titre.trim() || !chef.trim() || !projetId) return;
+    if (!titre.trim() || !chef.trim() || !projetId || estimatedCharge == null) return;
     setStatus("submitting");
     setErrorMsg(null);
     const { error } = await supabase.from("tasks").insert({
@@ -52,7 +57,7 @@ export default function App() {
       chef: chef.trim(),
       types,
       projet_id: projetId,
-      charge: 1,
+      charge: estimatedCharge,
       date_livraison: dateLivraison || null,
       sprint: sprintKeyFor(dateLivraison),
       priorite: "moyenne",
@@ -75,8 +80,8 @@ export default function App() {
         <div className="form-mark"><span>LS</span></div>
         <h1>Nouvelle demande</h1>
         <p className="form-intro">
-          Décris ta demande — elle arrivera directement dans le backlog de l'équipe design du Studio.
-          Aucune connexion n'est nécessaire.
+          Décris ta demande — elle arrivera directement dans le backlog de l'équipe design du Studio,
+          avec une charge estimée automatiquement à partir de tes réponses. Aucune connexion n'est nécessaire.
         </p>
 
         {status === "success" && (
@@ -132,9 +137,11 @@ export default function App() {
               <textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Contexte, contraintes, lien vers un brief…" />
             </label>
 
+            <Estimator state={estimatorState} setState={setEstimatorState} onEstimateChange={setEstimatedCharge} />
+
             {status === "error" && errorMsg && <div className="form-error">{errorMsg}</div>}
 
-            <button type="submit" className="form-btn-primary" disabled={status === "submitting" || projects.length === 0}>
+            <button type="submit" className="form-btn-primary" disabled={status === "submitting" || projects.length === 0 || estimatedCharge == null}>
               {status === "submitting" ? "Envoi…" : "Envoyer la demande"}
             </button>
           </form>

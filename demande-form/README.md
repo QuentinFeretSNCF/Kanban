@@ -50,3 +50,17 @@ Intitulé, nom du demandeur, projet concerné, type(s) de demande, date de
 livraison souhaitée, notes. Statut fixé à `backlog`, priorité par défaut
 `moyenne`, aucun designer assigné — l'équipe trie et complète la fiche
 depuis l'outil Kanban.
+
+## Estimateur de charge
+
+Le formulaire intègre un estimateur (`src/estimator.ts` pour le calcul,
+`src/components/Estimator.tsx` pour l'UI) : périmètre, complexité,
+typologie d'utilisateurs, plateformes, maturité de la demande, etc. Le
+nombre de jours calculé devient automatiquement la `charge` de la tâche
+créée — l'envoi est bloqué tant qu'aucun périmètre n'est sélectionné,
+comme dans l'outil d'origine.
+
+Les coefficients sont codés en dur dans `src/estimator.ts` (pas de panneau
+de calibration ouvert au public). Pour les ajuster, modifier ce fichier
+directement — pas de redéploiement de base de données nécessaire, juste un
+nouveau build.
