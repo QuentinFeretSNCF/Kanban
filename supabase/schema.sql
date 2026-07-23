@@ -105,6 +105,12 @@ create policy "authenticated insert tasks" on tasks for insert with check (auth.
 create policy "authenticated update tasks" on tasks for update using (auth.role() = 'authenticated');
 create policy "authenticated delete tasks" on tasks for delete using (auth.role() = 'authenticated');
 
+-- Formulaire public "demande-form" (déployé séparément, sans authentification) :
+-- lecture des projets pour le menu déroulant, et création de tâches limitée
+-- à la colonne Backlog. Rien d'autre n'est accessible sans authentification.
+create policy "anon read projects for public form" on projects for select using (auth.role() = 'anon');
+create policy "anon insert backlog tasks from public form" on tasks for insert to anon with check (statut = 'backlog');
+
 create policy "authenticated read task_designers" on task_designers for select using (auth.role() = 'authenticated');
 create policy "authenticated insert task_designers" on task_designers for insert with check (auth.role() = 'authenticated');
 create policy "authenticated update task_designers" on task_designers for update using (auth.role() = 'authenticated');
