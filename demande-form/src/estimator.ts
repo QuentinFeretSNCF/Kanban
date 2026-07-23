@@ -221,3 +221,11 @@ export function estimate(state: EstimatorState): EstimateResult | null {
 
   return { total, weeks, totalMonths, breakdown };
 }
+
+export function buildEstimatorSummary(result: EstimateResult): string {
+  const lines: string[] = [];
+  lines.push("Estimation de la charge :");
+  result.breakdown.forEach((l) => lines.push(`- ${l.label} : ${l.value}`));
+  lines.push(`Total estimé : ${result.total} j (~${result.weeks} semaine${result.weeks > 1 ? "s" : ""})`);
+  return lines.join("\n");
+}

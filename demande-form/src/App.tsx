@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { TYPES } from "./constants";
 import { sprintKeyFor, toISODate } from "./dateUtils";
-import { createEstimatorState, type EstimatorState } from "./estimator";
+import { buildEstimatorSummary, createEstimatorState, estimate, type EstimatorState } from "./estimator";
 import Estimator from "./components/Estimator";
 
 interface Project {
@@ -49,9 +49,11 @@ export default function App() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titre.trim() || !chef.trim() || !projetId || estimatedCharge == null) return;
+    const estimateResult = estimate(estimatorState);
+    if (!titre.trim() || !chef.trim() || !projetId || estimatedCharge == null || !estimateResult) return;
     setStatus("submitting");
     setErrorMsg(null);
+    const finalNotes = [notes.trim(), buildEstimatorSummary(estimateResult)].filter(Boolean).join("\n\n");
     const { error } = await supabase.from("tasks").insert({
       titre: titre.trim(),
       chef: chef.trim(),
@@ -63,7 +65,7 @@ export default function App() {
       priorite: "moyenne",
       statut: "backlog",
       difficulte: null,
-      notes: notes.trim(),
+      notes: finalNotes,
     });
     if (error) { setErrorMsg(error.message); setStatus("error"); return; }
     resetForm();
