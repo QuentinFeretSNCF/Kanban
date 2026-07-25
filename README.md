@@ -12,7 +12,9 @@ Outil de gestion des demandes design pour une équipe de 6 designers : Kanban, v
    - **Projet Supabase déjà existant, créé avant le formulaire public** : exécute aussi [`supabase/migrations/003_public_backlog_form.sql`](supabase/migrations/003_public_backlog_form.sql).
 3. Dans **Authentication → Providers**, laisse **Email** activé. L'app utilise un code à 6 chiffres envoyé par e-mail plutôt qu'un lien cliquable (plus fiable derrière les passerelles de sécurité d'entreprise qui pré-visitent les liens). Pense à inclure `{{ .Token }}` dans les templates **Magic Link** et **Reset Password** (**Authentication → Email Templates**) pour que le code apparaisse dans le mail.
 4. Récupère l'URL du projet et la clé `anon public` dans **Project Settings → API**.
-5. Pour un usage en équipe, configure un fournisseur SMTP externe (**Project Settings → Authentication → SMTP Settings**, ex. Resend) — le SMTP de test intégré à Supabase est limité en nombre d'envois par heure.
+5. Pour un usage en équipe, configure un fournisseur SMTP externe (**Authentication → Emails → SMTP Settings**) — le SMTP de test intégré à Supabase est limité en nombre d'envois par heure.
+   - **Sans domaine vérifié** (cas par défaut de ce projet) : un fournisseur comme Resend refuse d'envoyer à qui que ce soit d'autre que l'adresse du compte tant qu'aucun domaine n'est vérifié (`550 "You can only send testing emails to your own email address"`). Solution sans domaine ni coût : utiliser un compte **Gmail** comme SMTP — Host `smtp.gmail.com`, port `587`, Username = ton adresse Gmail, Password = un [mot de passe d'application](https://myaccount.google.com/apppasswords) Google (nécessite la validation en 2 étapes activée sur le compte). Limite : ~500 e-mails/jour, largement suffisant pour une équipe.
+   - **Avec un domaine** : Resend (ou équivalent) avec un domaine vérifié (SPF/DKIM) reste la solution la plus propre pour une adresse d'expéditeur professionnelle.
 
 ### 2. Configurer l'app
 
