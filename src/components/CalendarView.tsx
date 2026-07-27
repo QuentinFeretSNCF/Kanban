@@ -181,7 +181,7 @@ export default function CalendarView({
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--ink)" }}>{t.titre}</div>
                       <div style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 2 }}>
-                        {t.chef} · {t.types.join(", ")}
+                        {[t.chef, t.types.join(", ")].filter(Boolean).join(" · ")}
                       </div>
                       <div style={{ marginTop: 6 }}><ProjectTag project={p} /></div>
                     </div>

@@ -64,7 +64,7 @@ export default function TaskModal({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.titre.trim() || !form.chef.trim()) return;
+    if (!form.titre.trim()) return;
     setSaving(true);
     const sprint = sprintKeyFor(form.date_livraison);
     await onSave({ ...form, sprint, id: initial?.id });
@@ -109,8 +109,8 @@ export default function TaskModal({
           </label>
 
           <label className="studio-field">
-            <span>Chef de projet</span>
-            <input required value={form.chef} onChange={(e) => set("chef", e.target.value)} placeholder="Nom du chef de projet" />
+            <span>Chef de projet (optionnel)</span>
+            <input value={form.chef} onChange={(e) => set("chef", e.target.value)} placeholder="Nom du chef de projet" />
           </label>
 
           <label className="studio-field">
