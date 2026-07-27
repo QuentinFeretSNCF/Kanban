@@ -190,7 +190,7 @@ export default function TaskModal({
                     type="button"
                     key={d.id}
                     className={`studio-multiselect-chip ${form.difficulte === d.id ? "active" : ""}`}
-                    onClick={() => set("difficulte", form.difficulte === d.id ? null : d.id as DifficulteId)}
+                    onClick={(e) => { set("difficulte", form.difficulte === d.id ? null : d.id as DifficulteId); e.currentTarget.blur(); }}
                   >
                     {d.label}
                   </button>

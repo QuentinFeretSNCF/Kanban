@@ -15,7 +15,7 @@ export default function MultiSelect<T extends { id: string; label: string; color
             key={opt.id}
             className={`studio-multiselect-chip ${active ? "active" : ""}`}
             style={active && opt.color ? { background: opt.color, borderColor: opt.color, color: "#fff" } : undefined}
-            onClick={() => onToggle(opt.id)}
+            onClick={(e) => { onToggle(opt.id); e.currentTarget.blur(); }}
           >
             {opt.label}
           </button>
