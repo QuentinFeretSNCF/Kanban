@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { CalendarDays, FolderKanban, GripVertical, LayoutGrid, LogOut, Plus, Users } from "lucide-react";
 import { supabase } from "./supabaseClient";
-import type { Designer, Filters, Meeting, Project, StatusId, Subtask, Task, TaskDraft, TaskRow } from "./types";
+import type { Conge, Designer, Filters, Meeting, Project, StatusId, Subtask, Task, TaskDraft, TaskRow } from "./types";
 import { PROJECT_COLORS } from "./constants";
 import { applyTheme, getInitialTheme, type Theme } from "./theme";
 import Auth from "./components/Auth";
@@ -46,6 +46,7 @@ export default function App() {
   const [taskDesignerLinks, setTaskDesignerLinks] = useState<TaskDesignerLink[]>([]);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [conges, setConges] = useState<Conge[]>([]);
   const [designers, setDesigners] = useState<Designer[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [view, setView] = useState<ViewId>("kanban");
@@ -73,6 +74,7 @@ export default function App() {
         { data: td, error: tdErr },
         { data: st, error: stErr },
         { data: mt, error: mtErr },
+        { data: cg, error: cgErr },
       ] = await Promise.all([
         supabase.from("designers").select("*").order("created_at"),
         supabase.from("projects").select("*").order("created_at"),
@@ -80,9 +82,10 @@ export default function App() {
         supabase.from("task_designers").select("*"),
         supabase.from("subtasks").select("*").order("position"),
         supabase.from("meetings").select("*"),
+        supabase.from("conges").select("*"),
       ]);
       if (cancelled) return;
-      const err = dErr || pErr || tErr || tdErr || stErr || mtErr;
+      const err = dErr || pErr || tErr || tdErr || stErr || mtErr || cgErr;
       if (err) setErrorMsg(err.message);
       setDesigners(d ?? []);
       setProjects(p ?? []);
@@ -90,6 +93,7 @@ export default function App() {
       setTaskDesignerLinks((td ?? []) as TaskDesignerLink[]);
       setSubtasks((st ?? []) as Subtask[]);
       setMeetings((mt ?? []) as Meeting[]);
+      setConges((cg ?? []) as Conge[]);
       setDataLoading(false);
     })();
 
@@ -123,6 +127,10 @@ export default function App() {
       .on("postgres_changes", { event: "*", schema: "public", table: "meetings" }, (payload) => {
         if (payload.eventType === "DELETE") setMeetings((cur) => removeById(cur, (payload.old as Meeting).id));
         else setMeetings((cur) => upsertById(cur, payload.new as Meeting));
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "conges" }, (payload) => {
+        if (payload.eventType === "DELETE") setConges((cur) => removeById(cur, (payload.old as Conge).id));
+        else setConges((cur) => upsertById(cur, payload.new as Conge));
       })
       .subscribe();
 
@@ -271,6 +279,29 @@ export default function App() {
     }
   }, [meetings]);
 
+  const setCongeCharge = useCallback(async (designerId: string, sprint: string, charge: number) => {
+    const existing = conges.find((c) => c.designer_id === designerId && c.sprint === sprint);
+    if (charge <= 0) {
+      if (existing) {
+        const { error } = await supabase.from("conges").delete().eq("id", existing.id);
+        if (error) setErrorMsg(error.message);
+        else setConges((cur) => removeById(cur, existing.id));
+      }
+      return;
+    }
+    if (existing) {
+      const { error } = await supabase.from("conges").update({ charge }).eq("id", existing.id);
+      if (error) setErrorMsg(error.message);
+      else setConges((cur) => cur.map((c) => (c.id === existing.id ? { ...c, charge } : c)));
+    } else {
+      const { data, error } = await supabase.from("conges")
+        .insert({ designer_id: designerId, sprint, charge, titre: "Congés" })
+        .select().single();
+      if (error) { setErrorMsg(error.message); return; }
+      setConges((cur) => upsertById(cur, data as Conge));
+    }
+  }, [conges]);
+
   const openNew = () => { setModalTaskId(null); setCreatingTask(true); };
   const openEdit = (task: Task) => { setCreatingTask(false); setModalTaskId(task.id); };
   const closeModal = () => { setCreatingTask(false); setModalTaskId(null); };
@@ -331,13 +362,16 @@ export default function App() {
             />
           )}
           {view === "sprints" && (
-            <SprintsView tasks={tasks} designers={designers} projects={projects} meetings={meetings} onEdit={openEdit} onSetMeetingCharge={setMeetingCharge} />
+            <SprintsView
+              tasks={tasks} designers={designers} projects={projects} meetings={meetings} conges={conges}
+              onEdit={openEdit} onSetMeetingCharge={setMeetingCharge} onSetCongeCharge={setCongeCharge}
+            />
           )}
           {view === "calendrier" && <CalendarView tasks={tasks} designers={designers} projects={projects} onEdit={openEdit} />}
           {view === "projets" && (
             <ProjectsView tasks={tasks} designers={designers} projects={projects} onAddProject={addProject} onRenameProject={renameProject} onEdit={openEdit} />
           )}
-          {view === "equipe" && <TeamView tasks={tasks} designers={designers} meetings={meetings} onRenameDesigner={renameDesigner} />}
+          {view === "equipe" && <TeamView tasks={tasks} designers={designers} meetings={meetings} conges={conges} onRenameDesigner={renameDesigner} />}
         </>
       )}
 
