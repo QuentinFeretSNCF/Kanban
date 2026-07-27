@@ -45,6 +45,14 @@ export interface Meeting {
   charge: number;
 }
 
+export interface Conge {
+  id: string;
+  designer_id: string;
+  sprint: string;
+  titre: string;
+  charge: number;
+}
+
 /** Une TaskRow enrichie côté client avec ses designers assignés et ses sous-tâches. */
 export interface Task extends TaskRow {
   designer_ids: string[];

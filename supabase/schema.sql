@@ -66,6 +66,17 @@ create table if not exists meetings (
   created_at timestamptz not null default now()
 );
 
+-- Congés d'un designer sur un sprint donné : réduisent aussi sa capacité
+-- disponible, au même titre que les réunions.
+create table if not exists conges (
+  id uuid primary key default gen_random_uuid(),
+  designer_id uuid not null references designers(id) on delete cascade,
+  sprint date not null,
+  titre text not null default 'Congés',
+  charge numeric not null default 0.5,
+  created_at timestamptz not null default now()
+);
+
 create or replace function set_updated_at()
 returns trigger as $$
 begin
@@ -126,8 +137,14 @@ create policy "authenticated insert meetings" on meetings for insert with check 
 create policy "authenticated update meetings" on meetings for update using (auth.role() = 'authenticated');
 create policy "authenticated delete meetings" on meetings for delete using (auth.role() = 'authenticated');
 
+alter table conges enable row level security;
+create policy "authenticated read conges" on conges for select using (auth.role() = 'authenticated');
+create policy "authenticated insert conges" on conges for insert with check (auth.role() = 'authenticated');
+create policy "authenticated update conges" on conges for update using (auth.role() = 'authenticated');
+create policy "authenticated delete conges" on conges for delete using (auth.role() = 'authenticated');
+
 -- Realtime : pousser les changements de ces tables à tous les clients connectés.
-alter publication supabase_realtime add table designers, projects, tasks, task_designers, subtasks, meetings;
+alter publication supabase_realtime add table designers, projects, tasks, task_designers, subtasks, meetings, conges;
 
 -- Données de départ (idempotent : ne s'insère qu'une fois, table par table).
 insert into designers (name, color)

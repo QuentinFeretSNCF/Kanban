@@ -1,4 +1,4 @@
-import type { Meeting, Task } from "./types";
+import type { Conge, Meeting, Task } from "./types";
 import { CAPACITY_PER_DESIGNER } from "./constants";
 
 /** Une tâche assignée à plusieurs designers répartit sa charge à parts égales entre eux. */
@@ -19,9 +19,15 @@ export function meetingChargeForDesignerInSprint(meetings: Meeting[], designerId
     .reduce((s, m) => s + m.charge, 0);
 }
 
-/** Les réunions réduisent la capacité disponible du designer pour ce sprint. */
-export function effectiveCapacity(meetingCharge: number): number {
-  return Math.max(0, CAPACITY_PER_DESIGNER - meetingCharge);
+export function congeChargeForDesignerInSprint(conges: Conge[], designerId: string, sprint: string): number {
+  return conges
+    .filter((c) => c.designer_id === designerId && c.sprint === sprint)
+    .reduce((s, c) => s + c.charge, 0);
+}
+
+/** Les réunions et les congés réduisent la capacité disponible du designer pour ce sprint. */
+export function effectiveCapacity(meetingCharge: number, congeCharge = 0): number {
+  return Math.max(0, CAPACITY_PER_DESIGNER - meetingCharge - congeCharge);
 }
 
 export function subtaskProgress(task: Task): { done: number; total: number; pct: number } {

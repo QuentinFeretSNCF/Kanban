@@ -1,19 +1,21 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, ChevronLeft, ChevronRight, Users, X } from "lucide-react";
-import type { Designer, Meeting, Project, Task } from "../types";
-import { taskChargeForDesignerInSprint, meetingChargeForDesignerInSprint, effectiveCapacity } from "../capacity";
+import { CheckCircle2, ChevronLeft, ChevronRight, Palmtree, Users, X } from "lucide-react";
+import type { Conge, Designer, Meeting, Project, Task } from "../types";
+import { taskChargeForDesignerInSprint, meetingChargeForDesignerInSprint, congeChargeForDesignerInSprint, effectiveCapacity } from "../capacity";
 import { addDays, getMonday, sprintLabel, toISODate } from "../dateUtils";
 import { Avatar, PriorityDot } from "./atoms";
 
 export default function SprintsView({
-  tasks, designers, projects, meetings, onEdit, onSetMeetingCharge,
+  tasks, designers, projects, meetings, conges, onEdit, onSetMeetingCharge, onSetCongeCharge,
 }: {
   tasks: Task[];
   designers: Designer[];
   projects: Project[];
   meetings: Meeting[];
+  conges: Conge[];
   onEdit: (task: Task) => void;
   onSetMeetingCharge: (designerId: string, sprint: string, charge: number) => void;
+  onSetCongeCharge: (designerId: string, sprint: string, charge: number) => void;
 }) {
   const [offset, setOffset] = useState(0);
   const [projetFilter, setProjetFilter] = useState("all");
@@ -63,7 +65,8 @@ export default function SprintsView({
                 {designers.map((d) => {
                   const taskCharge = taskChargeForDesignerInSprint(tasks.filter((t) => projetFilter === "all" || t.projet_id === projetFilter), d.id, mondayISO);
                   const meetingCharge = meetingChargeForDesignerInSprint(meetings, d.id, mondayISO);
-                  const capacity = effectiveCapacity(meetingCharge);
+                  const congeCharge = congeChargeForDesignerInSprint(conges, d.id, mondayISO);
+                  const capacity = effectiveCapacity(meetingCharge, congeCharge);
                   const pct = capacity === 0 ? 100 : Math.min(100, (taskCharge / capacity) * 100);
                   const over = taskCharge > capacity;
                   return (
@@ -80,16 +83,29 @@ export default function SprintsView({
                       <div className="studio-bar-track">
                         <div className="studio-bar-fill" style={{ width: `${pct}%`, background: over ? "#D6462E" : d.color }} />
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                        <Users size={11} color="var(--ink-soft)" />
-                        <span style={{ fontSize: 10, color: "var(--ink-soft)" }}>Réunions</span>
-                        <input
-                          type="number" min={0} step={0.5}
-                          value={meetingCharge}
-                          onChange={(e) => onSetMeetingCharge(d.id, mondayISO, Math.max(0, parseFloat(e.target.value) || 0))}
-                          className="studio-meeting-input"
-                        />
-                        <span style={{ fontSize: 10, color: "var(--ink-soft)" }}>j</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Users size={11} color="var(--ink-soft)" />
+                          <span style={{ fontSize: 10, color: "var(--ink-soft)" }}>Réunions</span>
+                          <input
+                            type="number" min={0} step={0.5}
+                            value={meetingCharge}
+                            onChange={(e) => onSetMeetingCharge(d.id, mondayISO, Math.max(0, parseFloat(e.target.value) || 0))}
+                            className="studio-meeting-input"
+                          />
+                          <span style={{ fontSize: 10, color: "var(--ink-soft)" }}>j</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Palmtree size={11} color="var(--ink-soft)" />
+                          <span style={{ fontSize: 10, color: "var(--ink-soft)" }}>Congés</span>
+                          <input
+                            type="number" min={0} step={0.5}
+                            value={congeCharge}
+                            onChange={(e) => onSetCongeCharge(d.id, mondayISO, Math.max(0, parseFloat(e.target.value) || 0))}
+                            className="studio-meeting-input"
+                          />
+                          <span style={{ fontSize: 10, color: "var(--ink-soft)" }}>j</span>
+                        </div>
                       </div>
                     </div>
                   );
