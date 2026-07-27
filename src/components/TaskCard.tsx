@@ -37,7 +37,7 @@ export default function TaskCard({
         <div className="studio-card-title">{task.titre}</div>
         <GripVertical size={14} color="var(--line)" style={{ flexShrink: 0, marginTop: 2 }} />
       </div>
-      <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 0 }}>{task.chef}</div>
+      {task.chef && <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 0 }}>{task.chef}</div>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
         <ProjectTag project={project} />
         {task.types.map((t) => <span key={t} className="studio-chip">{t}</span>)}
