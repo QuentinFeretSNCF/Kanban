@@ -3,8 +3,8 @@ import { Moon, Sun } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { TYPES } from "./constants";
 import { sprintKeyFor, toISODate } from "./dateUtils";
-import { buildEstimatorSummary, createEstimatorState, estimate, type EstimatorState } from "./estimator";
-import Estimator from "./components/Estimator";
+import { buildEstimatorSummary, createEstimatorState, estimate, type EstimateResult, type EstimatorState } from "./estimator";
+import Estimator, { EstimatorSummary } from "./components/Estimator";
 import { applyTheme, getInitialTheme, type Theme } from "./theme";
 
 interface Project {
@@ -31,7 +31,8 @@ export default function App() {
   const [dateLivraison, setDateLivraison] = useState(toISODate(new Date()));
   const [notes, setNotes] = useState("");
   const [estimatorState, setEstimatorState] = useState<EstimatorState>(createEstimatorState);
-  const [estimatedCharge, setEstimatedCharge] = useState<number | null>(null);
+  const [estimateResult, setEstimateResult] = useState<EstimateResult | null>(null);
+  const estimatedCharge = estimateResult?.total ?? null;
 
   useEffect(() => {
     (async () => {
@@ -49,17 +50,17 @@ export default function App() {
 
   const resetForm = () => {
     setTitre(""); setChef(""); setTypes([]); setDateLivraison(toISODate(new Date())); setNotes("");
-    setEstimatorState(createEstimatorState()); setEstimatedCharge(null);
+    setEstimatorState(createEstimatorState()); setEstimateResult(null);
     if (projects.length > 0) setProjetId(projects[0].id);
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const estimateResult = estimate(estimatorState);
-    if (!titre.trim() || !chef.trim() || !projetId || estimatedCharge == null || !estimateResult) return;
+    const freshEstimate = estimate(estimatorState);
+    if (!titre.trim() || !chef.trim() || !projetId || estimatedCharge == null || !freshEstimate) return;
     setStatus("submitting");
     setErrorMsg(null);
-    const finalNotes = [notes.trim(), buildEstimatorSummary(estimateResult)].filter(Boolean).join("\n\n");
+    const finalNotes = [notes.trim(), buildEstimatorSummary(freshEstimate)].filter(Boolean).join("\n\n");
     const { error } = await supabase.from("tasks").insert({
       titre: titre.trim(),
       chef: chef.trim(),
@@ -84,6 +85,7 @@ export default function App() {
 
   return (
     <div className="form-shell">
+      <div className="form-layout">
       <div className="form-card">
         <div className="form-header">
           <div className="form-mark"><span>LS</span></div>
@@ -155,7 +157,7 @@ export default function App() {
               <textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Contexte, contraintes, lien vers un brief…" />
             </label>
 
-            <Estimator state={estimatorState} setState={setEstimatorState} onEstimateChange={setEstimatedCharge} />
+            <Estimator state={estimatorState} setState={setEstimatorState} onEstimateChange={setEstimateResult} />
 
             {status === "error" && errorMsg && <div className="form-error">{errorMsg}</div>}
 
@@ -164,6 +166,19 @@ export default function App() {
             </button>
           </form>
         )}
+      </div>
+
+      {status !== "success" && (
+        <aside className="form-sidebar">
+          <div className="form-sidebar-inner">
+            <div className="est-panel-head">
+              <span>Estimation de la charge</span>
+              <span className="est-panel-sub">Se met à jour au fil de tes réponses.</span>
+            </div>
+            <EstimatorSummary result={estimateResult} />
+          </div>
+        </aside>
+      )}
       </div>
     </div>
   );
