@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type {
   AttenduKey, ComplexiteKey, DsCoverageKey, EcranKey, EnvironnementKey,
-  EstimatorState, NatureKey, PartiesKey, ScopeKey, TypologieKey,
+  EstimateResult, EstimatorState, NatureKey, PartiesKey, ScopeKey, TypologieKey,
 } from "../estimator";
 import {
   ATTENDUS, COMPLEXITE, DS_COVERAGE, ECRANS, ENVIRONNEMENT, MATURITE,
@@ -68,12 +68,34 @@ function PillGroup<K extends string>({
   );
 }
 
+export function EstimatorSummary({ result }: { result: EstimateResult | null }) {
+  return (
+    <div className="est-result">
+      {!result ? (
+        <div className="est-warning">Sélectionne au moins un périmètre pour estimer la charge.</div>
+      ) : (
+        <>
+          <div className="est-total">{result.total} j <span>≈ {result.weeks} semaine{result.weeks > 1 ? "s" : ""}</span></div>
+          <details className="est-breakdown-details">
+            <summary>Détail du calcul</summary>
+            <ul className="est-breakdown">
+              {result.breakdown.map((l, i) => (
+                <li key={i}><span>{l.label}</span><span>{l.value}</span></li>
+              ))}
+            </ul>
+          </details>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function Estimator({
   state, setState, onEstimateChange,
 }: {
   state: EstimatorState;
   setState: React.Dispatch<React.SetStateAction<EstimatorState>>;
-  onEstimateChange: (days: number | null) => void;
+  onEstimateChange: (result: EstimateResult | null) => void;
 }) {
   const toggleInSet = <K,>(key: keyof EstimatorState, value: K) => {
     setState((s) => {
@@ -88,7 +110,7 @@ export default function Estimator({
   const tier = getPageTier(state.pages);
 
   useEffect(() => {
-    onEstimateChange(result ? result.total : null);
+    onEstimateChange(result);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result?.total]);
 
@@ -255,24 +277,6 @@ export default function Estimator({
             />
             <div className="est-hint">{DS_COVERAGE[state.dsCoverage].desc}</div>
           </div>
-        )}
-      </div>
-
-      <div className="est-result">
-        {!result ? (
-          <div className="est-warning">Sélectionne au moins un périmètre pour estimer la charge.</div>
-        ) : (
-          <>
-            <div className="est-total">{result.total} j <span>≈ {result.weeks} semaine{result.weeks > 1 ? "s" : ""}</span></div>
-            <details className="est-breakdown-details">
-              <summary>Détail du calcul</summary>
-              <ul className="est-breakdown">
-                {result.breakdown.map((l, i) => (
-                  <li key={i}><span>{l.label}</span><span>{l.value}</span></li>
-                ))}
-              </ul>
-            </details>
-          </>
         )}
       </div>
     </div>
