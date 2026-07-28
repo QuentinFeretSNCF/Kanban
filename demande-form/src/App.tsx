@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { TYPES } from "./constants";
 import { sprintKeyFor, toISODate } from "./dateUtils";
 import { buildEstimatorSummary, createEstimatorState, estimate, type EstimatorState } from "./estimator";
 import Estimator from "./components/Estimator";
+import { applyTheme, getInitialTheme, type Theme } from "./theme";
 
 interface Project {
   id: string;
@@ -14,6 +16,10 @@ interface Project {
 type Status = "loading" | "ready" | "submitting" | "success" | "error";
 
 export default function App() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  useEffect(() => { applyTheme(theme); }, [theme]);
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+
   const [status, setStatus] = useState<Status>("loading");
   const [projects, setProjects] = useState<Project[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -79,7 +85,17 @@ export default function App() {
   return (
     <div className="form-shell">
       <div className="form-card">
-        <div className="form-mark"><span>LS</span></div>
+        <div className="form-header">
+          <div className="form-mark"><span>LS</span></div>
+          <button
+            type="button"
+            className="form-theme-toggle"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Passer au thème clair" : "Passer au thème sombre"}
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
         <h1>Nouvelle demande</h1>
         <p className="form-intro">
           Décris ta demande — elle arrivera directement dans le backlog de l'équipe design du Studio,
