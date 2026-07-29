@@ -5,6 +5,7 @@ import { supabase } from "./supabaseClient";
 import type { Conge, Designer, Filters, Meeting, Project, StatusId, Subtask, Task, TaskDraft, TaskRow } from "./types";
 import { PROJECT_COLORS } from "./constants";
 import { applyTheme, getInitialTheme, type Theme } from "./theme";
+import { generateSubtasks } from "./subtaskGenerator";
 import Auth from "./components/Auth";
 import ThemeToggle from "./components/ThemeToggle";
 import TaskModal from "./components/TaskModal";
@@ -205,6 +206,7 @@ export default function App() {
       const newTask = data as TaskRow;
       setTaskRows((cur) => upsertById(cur, newTask));
       await syncTaskDesigners(newTask.id, designer_ids);
+      if (draft.notes.trim()) await generateSubtasks(newTask.id, draft.titre, draft.notes.trim());
     }
     setCreatingTask(false);
     setModalTaskId(null);
