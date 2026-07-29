@@ -6,6 +6,7 @@ import { sprintKeyFor, toISODate } from "./dateUtils";
 import { buildEstimatorSummary, createEstimatorState, estimate, type EstimateResult, type EstimatorState } from "./estimator";
 import Estimator, { EstimatorSummary } from "./components/Estimator";
 import { applyTheme, getInitialTheme, type Theme } from "./theme";
+import { generateSubtasks } from "./subtaskGenerator";
 
 interface Project {
   id: string;
@@ -61,7 +62,7 @@ export default function App() {
     setStatus("submitting");
     setErrorMsg(null);
     const finalNotes = [notes.trim(), buildEstimatorSummary(freshEstimate)].filter(Boolean).join("\n\n");
-    const { error } = await supabase.from("tasks").insert({
+    const { data: taskRow, error } = await supabase.from("tasks").insert({
       titre: titre.trim(),
       chef: chef.trim(),
       types,
@@ -73,8 +74,9 @@ export default function App() {
       statut: "backlog",
       difficulte: null,
       notes: finalNotes,
-    });
+    }).select().single();
     if (error) { setErrorMsg(error.message); setStatus("error"); return; }
+    if (notes.trim()) await generateSubtasks(taskRow.id, titre.trim(), notes.trim());
     resetForm();
     setStatus("success");
   };
