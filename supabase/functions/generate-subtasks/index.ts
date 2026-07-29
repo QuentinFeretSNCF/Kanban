@@ -11,7 +11,9 @@
 //
 // En cas d'erreur (clé absente, API indisponible, réponse malformée), la
 // fonction répond toujours 200 avec { subtasks: [] } : la création de la
-// tâche ne doit jamais échouer à cause de la génération IA.
+// tâche ne doit jamais échouer à cause de la génération IA. Un champ
+// "reason" est ajouté quand la liste est vide, pour diagnostiquer depuis
+// la console du navigateur sans avoir à ouvrir les logs Supabase.
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const MODEL = "claude-haiku-4-5-20251001";
@@ -20,6 +22,13 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+function empty(reason: string) {
+  console.log("[generate-subtasks] vide :", reason);
+  return new Response(JSON.stringify({ subtasks: [], reason }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 function extractSubtasks(raw: string): string[] {
   const match = raw.match(/\[[\s\S]*\]/);
@@ -42,11 +51,8 @@ Deno.serve(async (req: Request) => {
   try {
     const { titre, notes } = await req.json();
     const text = (notes ?? "").toString().trim();
-    if (!ANTHROPIC_API_KEY || !text) {
-      return new Response(JSON.stringify({ subtasks: [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!ANTHROPIC_API_KEY) return empty("missing_api_key");
+    if (!text) return empty("empty_notes");
 
     const prompt = `Voici une demande envoyée à une équipe design.
 
@@ -70,21 +76,20 @@ Extrais une liste de sous-tâches concrètes et actionnables à partir de ces no
     });
 
     if (!res.ok) {
-      return new Response(JSON.stringify({ subtasks: [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const errText = await res.text();
+      return empty(`anthropic_error_${res.status}: ${errText.slice(0, 300)}`);
     }
 
     const data = await res.json();
     const raw = (data.content ?? []).map((b: { text?: string }) => b.text ?? "").join("");
     const subtasks = extractSubtasks(raw);
 
+    if (subtasks.length === 0) return empty(`no_subtasks_parsed: ${raw.slice(0, 300)}`);
+
     return new Response(JSON.stringify({ subtasks }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch {
-    return new Response(JSON.stringify({ subtasks: [] }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch (err) {
+    return empty(`exception: ${err instanceof Error ? err.message : String(err)}`);
   }
 });
