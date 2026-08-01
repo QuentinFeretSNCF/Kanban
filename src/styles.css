@@ -110,7 +110,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .studio-modal { width: 100vw; max-width: 100vw; }
 }
 .studio-field { display: flex; flex-direction: column; gap: 5px; }
-.studio-field span { font-size: 11.5px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.3px; }
+.studio-field span { font-size: 11.5px; font-weight: 600; color: var(--ink-soft); text-transform: lowercase; letter-spacing: 0.3px; }
+.studio-field span::first-letter { text-transform: uppercase; }
 .studio-field input, .studio-field select, .studio-field textarea { border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; font-size: 13.5px; outline: none; color: var(--ink); background: var(--paper); resize: vertical; }
 .studio-field input:focus, .studio-field select:focus, .studio-field textarea:focus { border-color: var(--accent); }
 
