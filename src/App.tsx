@@ -53,7 +53,7 @@ export default function App() {
   const [view, setView] = useState<ViewId>("kanban");
   const [modalTaskId, setModalTaskId] = useState<string | null>(null);
   const [creatingTask, setCreatingTask] = useState(false);
-  const [filters, setFilters] = useState<Filters>({ designerId: "all", projetId: "all", priorite: "all", search: "" });
+  const [filters, setFilters] = useState<Filters>({ designerId: "all", projetId: "all", priorite: "all", epic: "all", search: "" });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
