@@ -26,7 +26,7 @@ export const PRIORITIES: { id: PrioriteId; label: string; color: string }[] = [
 export const DIFFICULTIES: { id: DifficulteId; label: string; description: string }[] = [
   { id: "XS", label: "Très facile", description: "Résolu en quelques minutes" },
   { id: "S", label: "Facile", description: "Résolu en quelques heures" },
-  { id: "M", label: "Moyen", description: "Résolu entre un jour à deux jours" },
+  { id: "M", label: "Moyen", description: "Résolu en quelques jours" },
   { id: "L", label: "Difficile", description: "Nécessite un cadrage, une coordination" },
   { id: "XL", label: "Très difficile", description: "Long, versatile avec un risque d'évolution" },
   { id: "XXL", label: "Dangereux", description: "Pour les sujets ambitieux sans cadrage" },
