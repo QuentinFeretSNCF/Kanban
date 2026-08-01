@@ -191,6 +191,7 @@ export default function App() {
       charge: draft.charge,
       date_livraison: draft.date_livraison,
       sprint: draft.sprint,
+      sprint_debut: draft.sprint_debut,
       priorite: draft.priorite,
       statut: draft.statut,
       notes: draft.notes,

@@ -148,8 +148,9 @@ function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects:
           const project = projects.find((p) => p.id === t.projet_id);
           const prio = PRIORITIES.find((p) => p.id === t.priorite)!;
           const deliveryDay = new Date(t.date_livraison + "T00:00:00").getDate();
-          const startISO = t.sprint && t.sprint >= monthStartISO ? t.sprint : monthStartISO;
-          const startDay = t.sprint ? new Date(Math.max(new Date(startISO + "T00:00:00").getTime(), new Date(monthStartISO + "T00:00:00").getTime())).getDate() : deliveryDay;
+          const startCandidate = t.sprint_debut || t.sprint || t.date_livraison!;
+          const startClamped = startCandidate < monthStartISO ? monthStartISO : startCandidate;
+          const startDay = new Date(startClamped + "T00:00:00").getDate();
           const span = Math.max(1, deliveryDay - startDay + 1);
           const gridRow = rowIndex + 3;
           return (
