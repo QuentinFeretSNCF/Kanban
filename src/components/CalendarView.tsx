@@ -182,16 +182,20 @@ export default function CalendarView({
   const [monthOffset, setMonthOffset] = useState(0);
 
   const grouped = useMemo(() => {
-    const sorted = [...tasks].sort((a, b) => (a.date_livraison || "").localeCompare(b.date_livraison || ""));
+    const now = new Date();
+    const ref = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+    const monthKeyFilter = `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, "0")}`;
+    const sorted = [...tasks]
+      .filter((t) => t.date_livraison && t.date_livraison.slice(0, 7) === monthKeyFilter)
+      .sort((a, b) => (a.date_livraison || "").localeCompare(b.date_livraison || ""));
     const map = new Map<string, Task[]>();
     sorted.forEach((t) => {
-      if (!t.date_livraison) return;
-      const monthKey = t.date_livraison.slice(0, 7);
+      const monthKey = t.date_livraison!.slice(0, 7);
       if (!map.has(monthKey)) map.set(monthKey, []);
       map.get(monthKey)!.push(t);
     });
     return Array.from(map.entries());
-  }, [tasks]);
+  }, [tasks, monthOffset]);
 
   return (
     <div>
@@ -249,7 +253,7 @@ export default function CalendarView({
             </div>
           </div>
         ))}
-        {grouped.length === 0 && <div className="studio-empty-col">Aucune livraison planifiée</div>}
+        {grouped.length === 0 && <div className="studio-empty-col">Aucune livraison planifiée ce mois-ci.</div>}
       </div>
     </div>
   );
