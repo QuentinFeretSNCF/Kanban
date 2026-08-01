@@ -192,6 +192,8 @@ export default function App() {
       date_livraison: draft.date_livraison,
       sprint: draft.sprint,
       sprint_debut: draft.sprint_debut,
+      is_epic: draft.is_epic,
+      epic_id: draft.is_epic ? null : draft.epic_id,
       priorite: draft.priorite,
       statut: draft.statut,
       notes: draft.notes,
@@ -380,7 +382,9 @@ export default function App() {
 
       {showModal && (
         <TaskModal
+          key={modalTask?.id ?? "new"}
           initial={modalTask}
+          tasks={tasks}
           designers={designers}
           projects={projects}
           onAddProject={addProject}
@@ -391,6 +395,7 @@ export default function App() {
           onToggleSubtask={toggleSubtask}
           onDeleteSubtask={deleteSubtask}
           onReorderSubtasks={reorderSubtasks}
+          onOpenTask={openEdit}
         />
       )}
 

@@ -25,6 +25,8 @@ export interface TaskRow {
   date_livraison: string | null;
   sprint: string | null;
   sprint_debut: string | null;
+  is_epic: boolean;
+  epic_id: string | null;
   priorite: PrioriteId;
   statut: StatusId;
   notes: string;

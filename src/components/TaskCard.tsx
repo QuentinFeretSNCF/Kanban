@@ -1,12 +1,13 @@
-import { AlertTriangle, GripVertical } from "lucide-react";
+import { AlertTriangle, GripVertical, Layers } from "lucide-react";
 import type { Designer, Project, Task } from "../types";
 import { PRIORITIES } from "../constants";
 import { fmtShort } from "../dateUtils";
-import { taskShare, subtaskProgress } from "../capacity";
+import { taskShare, subtaskProgress, epicProgress } from "../capacity";
 import { AvatarStack, DifficultyBadge, ProgressBar, ProjectTag } from "./atoms";
 
 export default function TaskCard({
   task,
+  allTasks,
   designers,
   project,
   onEdit,
@@ -14,6 +15,7 @@ export default function TaskCard({
   overdue,
 }: {
   task: Task;
+  allTasks: Task[];
   designers: Designer[];
   project?: Project | null;
   onEdit: (task: Task) => void;
@@ -22,7 +24,7 @@ export default function TaskCard({
 }) {
   const prio = PRIORITIES.find((p) => p.id === task.priorite) || PRIORITIES[1];
   const assigned = task.designer_ids.map((id) => designers.find((d) => d.id === id));
-  const progress = subtaskProgress(task);
+  const progress = task.is_epic ? epicProgress(task, allTasks) : subtaskProgress(task);
   const share = taskShare(task);
 
   return (
@@ -39,6 +41,11 @@ export default function TaskCard({
       </div>
       {task.chef && <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 0 }}>{task.chef}</div>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
+        {task.is_epic && (
+          <span className="studio-chip" style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "var(--accent-soft)", color: "var(--accent)" }}>
+            <Layers size={10} /> Epic
+          </span>
+        )}
         <ProjectTag project={project} />
         {task.types.map((t) => <span key={t} className="studio-chip">{t}</span>)}
         <DifficultyBadge id={task.difficulte} />

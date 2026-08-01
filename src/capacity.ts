@@ -28,7 +28,7 @@ export function taskSprints(task: Task): string[] {
 
 export function taskChargeForDesignerInSprint(tasks: Task[], designerId: string, sprint: string): number {
   return tasks
-    .filter((t) => t.designer_ids.includes(designerId))
+    .filter((t) => t.designer_ids.includes(designerId) && !t.is_epic)
     .reduce((s, t) => {
       const sprints = taskSprints(t);
       if (!sprints.includes(sprint)) return s;
@@ -56,5 +56,17 @@ export function effectiveCapacity(meetingCharge: number, congeCharge = 0): numbe
 export function subtaskProgress(task: Task): { done: number; total: number; pct: number } {
   const total = task.subtasks.length;
   const done = task.subtasks.filter((s) => s.fait).length;
+  return { done, total, pct: total === 0 ? 0 : Math.round((done / total) * 100) };
+}
+
+/** Progression d'un epic : proportion de ses tickets enfants livrés. */
+export function epicChildren(epic: Task, allTasks: Task[]): Task[] {
+  return allTasks.filter((t) => t.epic_id === epic.id);
+}
+
+export function epicProgress(epic: Task, allTasks: Task[]): { done: number; total: number; pct: number } {
+  const children = epicChildren(epic, allTasks);
+  const done = children.filter((t) => t.statut === "livre").length;
+  const total = children.length;
   return { done, total, pct: total === 0 ? 0 : Math.round((done / total) * 100) };
 }

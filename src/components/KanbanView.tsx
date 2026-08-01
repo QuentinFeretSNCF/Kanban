@@ -80,6 +80,7 @@ export default function KanbanView({
                   <TaskCard
                     key={t.id}
                     task={t}
+                    allTasks={tasks}
                     designers={designers}
                     project={projects.find((p) => p.id === t.projet_id)}
                     onEdit={onEdit}

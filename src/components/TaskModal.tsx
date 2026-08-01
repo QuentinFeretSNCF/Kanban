@@ -3,12 +3,13 @@ import { GripVertical, Plus, Trash2, X } from "lucide-react";
 import type { Designer, DifficulteId, PrioriteId, Project, StatusId, Task, TaskDraft } from "../types";
 import { DIFFICULTIES, PRIORITIES, STATUSES, TYPES } from "../constants";
 import { sprintKeyFor, toISODate } from "../dateUtils";
-import { subtaskProgress } from "../capacity";
+import { epicChildren, epicProgress, subtaskProgress } from "../capacity";
 import MultiSelect from "./MultiSelect";
 import { ProgressBar } from "./atoms";
 
 export default function TaskModal({
   initial,
+  tasks,
   designers,
   projects,
   onAddProject,
@@ -19,8 +20,10 @@ export default function TaskModal({
   onToggleSubtask,
   onDeleteSubtask,
   onReorderSubtasks,
+  onOpenTask,
 }: {
   initial: Task | null;
+  tasks: Task[];
   designers: Designer[];
   projects: Project[];
   onAddProject: (name: string) => Promise<string>;
@@ -31,11 +34,12 @@ export default function TaskModal({
   onToggleSubtask: (id: string, fait: boolean) => void;
   onDeleteSubtask: (id: string) => void;
   onReorderSubtasks: (orderedIds: string[]) => void;
+  onOpenTask: (task: Task) => void;
 }) {
   const blank: TaskDraft = {
     titre: "", chef: "", types: [], designer_ids: [], difficulte: null,
     projet_id: projects[0]?.id ?? null, charge: 1, date_livraison: toISODate(new Date()),
-    sprint: null, sprint_debut: null, priorite: "moyenne", statut: "backlog", notes: "",
+    sprint: null, sprint_debut: null, is_epic: false, epic_id: null, priorite: "moyenne", statut: "backlog", notes: "",
   };
   const [form, setForm] = useState<TaskDraft>(() => {
     if (!initial) return blank;
@@ -92,6 +96,8 @@ export default function TaskModal({
   };
 
   const progress = initial ? subtaskProgress(initial) : null;
+  const children = initial?.is_epic ? epicChildren(initial, tasks) : [];
+  const childrenStats = initial?.is_epic ? epicProgress(initial, tasks) : { done: 0, total: 0, pct: 0 };
 
   return (
     <div className="studio-modal-overlay" onClick={onClose}>
@@ -109,6 +115,27 @@ export default function TaskModal({
             <span>Intitulé de la tâche</span>
             <input required value={form.titre} onChange={(e) => set("titre", e.target.value)} placeholder="Ex : Cadrage UX — espace client" />
           </label>
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink)" }}>
+            <input
+              type="checkbox"
+              checked={form.is_epic}
+              onChange={(e) => set("is_epic", e.target.checked)}
+            />
+            Ceci est un epic (regroupe d'autres tickets)
+          </label>
+
+          {!form.is_epic && (
+            <label className="studio-field">
+              <span>Epic parent (optionnel)</span>
+              <select value={form.epic_id ?? ""} onChange={(e) => set("epic_id", e.target.value || null)}>
+                <option value="">Aucun</option>
+                {tasks.filter((t) => t.is_epic && t.id !== initial?.id).sort((a, b) => a.titre.localeCompare(b.titre, "fr")).map((e) => (
+                  <option key={e.id} value={e.id}>{e.titre}</option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="studio-field">
             <span>Chef de projet (optionnel)</span>
@@ -210,6 +237,25 @@ export default function TaskModal({
             <span>Notes (optionnel)</span>
             <textarea rows={10} value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Contexte, lien vers le brief..." />
           </label>
+
+          {initial?.is_epic && (
+            <div className="studio-field">
+              <span>Tickets enfants{childrenStats.total > 0 ? ` (${childrenStats.done}/${childrenStats.total} livrés)` : ""}</span>
+              {childrenStats.total > 0 && <ProgressBar pct={childrenStats.pct} label={`${childrenStats.pct}%`} />}
+              {children.length === 0 ? (
+                <div className="studio-empty-col" style={{ padding: "8px 0" }}>Aucun ticket rattaché à cet epic pour l'instant.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6 }}>
+                  {children.map((c) => (
+                    <div key={c.id} onClick={() => onOpenTask(c)} className="studio-sprint-row" style={{ padding: "6px 8px" }}>
+                      <span style={{ flex: 1, fontSize: 12.5, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.titre}</span>
+                      <span className="studio-chip">{STATUSES.find((s) => s.id === c.statut)?.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="studio-field">
             <span>Sous-tâches{progress && progress.total > 0 ? ` (${progress.done}/${progress.total})` : ""}</span>

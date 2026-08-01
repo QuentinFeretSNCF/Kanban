@@ -31,6 +31,8 @@ create table if not exists tasks (
   date_livraison date,
   sprint date,
   sprint_debut date,
+  is_epic boolean not null default false,
+  epic_id uuid references tasks(id) on delete set null,
   priorite text not null default 'moyenne',
   statut text not null default 'backlog',
   notes text not null default '',
