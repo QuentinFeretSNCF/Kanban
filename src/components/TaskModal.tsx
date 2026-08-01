@@ -126,11 +126,14 @@ export default function TaskModal({
 
           <label className="studio-field">
             <span>Designer(s) assigné(s)</span>
-            <MultiSelect
-              options={designers.map((d) => ({ id: d.id, label: d.name, color: d.color }))}
-              selected={form.designer_ids}
-              onToggle={(id) => toggleIn("designer_ids", id)}
-            />
+            <select
+              multiple
+              size={Math.min(designers.length || 1, 6)}
+              value={form.designer_ids}
+              onChange={(e) => set("designer_ids", Array.from(e.target.selectedOptions, (o) => o.value))}
+            >
+              {designers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
           </label>
 
           <label className="studio-field">
@@ -194,18 +197,13 @@ export default function TaskModal({
             </label>
             <label className="studio-field">
               <span>Difficulté</span>
-              <div className="studio-multiselect">
-                {DIFFICULTIES.map((d) => (
-                  <button
-                    type="button"
-                    key={d.id}
-                    className={`studio-multiselect-chip ${form.difficulte === d.id ? "active" : ""}`}
-                    onClick={(e) => { set("difficulte", form.difficulte === d.id ? null : d.id as DifficulteId); e.currentTarget.blur(); }}
-                  >
-                    {d.label}
-                  </button>
-                ))}
-              </div>
+              <select
+                value={form.difficulte ?? ""}
+                onChange={(e) => set("difficulte", (e.target.value || null) as DifficulteId | null)}
+              >
+                <option value="">—</option>
+                {DIFFICULTIES.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
+              </select>
             </label>
           </div>
 
