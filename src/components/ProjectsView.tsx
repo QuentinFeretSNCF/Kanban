@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Designer, Project, Task } from "../types";
+import { STATUSES } from "../constants";
 import { Avatar, PriorityDot } from "./atoms";
 
 export default function ProjectsView({
@@ -15,6 +17,30 @@ export default function ProjectsView({
 }) {
   const [newName, setNewName] = useState("");
 
+  const sortedProjects = useMemo(
+    () => [...projects].sort((a, b) => a.name.localeCompare(b.name, "fr")),
+    [projects]
+  );
+
+  const byProject = useMemo(
+    () => sortedProjects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      color: p.color,
+      count: tasks.filter((t) => t.projet_id === p.id).length,
+    })),
+    [sortedProjects, tasks]
+  );
+
+  const byStatus = useMemo(
+    () => STATUSES.map((s) => ({
+      id: s.id,
+      label: s.label,
+      count: tasks.filter((t) => t.statut === s.id).length,
+    })),
+    [tasks]
+  );
+
   const addProject = async () => {
     const name = newName.trim();
     if (!name) return;
@@ -26,6 +52,55 @@ export default function ProjectsView({
     <div>
       <div className="studio-calendar-intro">
         {projects.length} projets suivis par le studio — répartition des tâches actives par projet.
+      </div>
+
+      <div className="studio-panel" style={{ marginBottom: 22 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 28 }}>
+          <div style={{ flex: "0 0 auto" }}>
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: 0.3 }}>
+              Tâches au total
+            </div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 34, color: "var(--ink)", marginTop: 4 }}>
+              {tasks.length}
+            </div>
+          </div>
+
+          <div style={{ flex: "1 1 260px", minWidth: 260 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
+              Répartition par projet
+            </div>
+            <ResponsiveContainer width="100%" height={Math.max(120, byProject.length * 32)}>
+              <BarChart data={byProject} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: "var(--ink-soft)" }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12, fill: "var(--ink)" }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ fontFamily: "var(--font-body)", fontSize: 12, border: "1px solid var(--line)", borderRadius: 8 }}
+                  formatter={(v: number) => [v, "Tâches"]}
+                />
+                <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                  {byProject.map((p) => <Cell key={p.id} fill={p.color} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div style={{ flex: "1 1 260px", minWidth: 260 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
+              Répartition par statut
+            </div>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={byStatus} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                <XAxis dataKey="label" tick={{ fontSize: 11.5, fill: "var(--ink-soft)" }} axisLine={{ stroke: "var(--line)" }} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--ink-soft)" }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ fontFamily: "var(--font-body)", fontSize: 12, border: "1px solid var(--line)", borderRadius: 8 }}
+                  formatter={(v: number) => [v, "Tâches"]}
+                />
+                <Bar dataKey="count" fill="var(--accent)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       <div className="studio-toolbar">
@@ -42,7 +117,7 @@ export default function ProjectsView({
       </div>
 
       <div className="studio-projects-grid">
-        {projects.map((p) => {
+        {sortedProjects.map((p) => {
           const pTasks = tasks.filter((t) => t.projet_id === p.id);
           const active = pTasks.filter((t) => t.statut !== "livre");
           const charge = active.reduce((s, t) => s + (t.charge || 0), 0);
