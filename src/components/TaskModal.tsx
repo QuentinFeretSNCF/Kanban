@@ -96,6 +96,7 @@ export default function TaskModal({
   return (
     <div className="studio-modal-overlay" onClick={onClose}>
       <div className="studio-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="studio-modal-scroll">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
             {initial ? "Modifier la demande" : "Nouvelle demande"}
@@ -103,7 +104,7 @@ export default function TaskModal({
           <button type="button" onClick={onClose} className="studio-icon-btn"><X size={18} /></button>
         </div>
 
-        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form id="task-form" onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <label className="studio-field">
             <span>Intitulé de la tâche</span>
             <input required value={form.titre} onChange={(e) => set("titre", e.target.value)} placeholder="Ex : Cadrage UX — espace client" />
@@ -210,7 +211,7 @@ export default function TaskModal({
 
           <label className="studio-field">
             <span>Notes (optionnel)</span>
-            <textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Contexte, lien vers le brief..." />
+            <textarea rows={10} value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Contexte, lien vers le brief..." />
           </label>
 
           <div className="studio-field">
@@ -253,21 +254,22 @@ export default function TaskModal({
               </div>
             )}
           </div>
-
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-            {initial ? (
-              <button type="button" onClick={() => onDelete(initial.id)} className="studio-btn-ghost-danger">
-                <Trash2 size={14} /> Supprimer
-              </button>
-            ) : <span />}
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" onClick={onClose} className="studio-btn-ghost">Annuler</button>
-              <button type="submit" className="studio-btn-primary" disabled={saving}>
-                {saving ? "Enregistrement…" : initial ? "Enregistrer" : "Créer la demande"}
-              </button>
-            </div>
-          </div>
         </form>
+        </div>
+
+        <div className="studio-modal-footer">
+          {initial ? (
+            <button type="button" onClick={() => onDelete(initial.id)} className="studio-btn-ghost-danger">
+              <Trash2 size={14} /> Supprimer
+            </button>
+          ) : <span />}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={onClose} className="studio-btn-ghost">Annuler</button>
+            <button type="submit" form="task-form" className="studio-btn-primary" disabled={saving}>
+              {saving ? "Enregistrement…" : initial ? "Enregistrer" : "Créer la demande"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
