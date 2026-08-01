@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, Legend, RadialBar, RadialBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Designer, Project, Task } from "../types";
 import { STATUSES } from "../constants";
 import { Avatar, PriorityDot } from "./atoms";
+
+const STATUS_COLORS = ["#8B5E3C", "#B8862B", "#4F6D7A", "#6B5B95", "#557153"];
 
 export default function ProjectsView({
   tasks, designers, projects, onAddProject, onRenameProject, onEdit,
@@ -33,10 +35,11 @@ export default function ProjectsView({
   );
 
   const byStatus = useMemo(
-    () => STATUSES.map((s) => ({
+    () => STATUSES.map((s, i) => ({
       id: s.id,
       label: s.label,
       count: tasks.filter((t) => t.statut === s.id).length,
+      fill: STATUS_COLORS[i % STATUS_COLORS.length],
     })),
     [tasks]
   );
@@ -69,15 +72,18 @@ export default function ProjectsView({
             <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
               Répartition par projet
             </div>
-            <ResponsiveContainer width="100%" height={Math.max(120, byProject.length * 32)}>
-              <BarChart data={byProject} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: "var(--ink-soft)" }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12, fill: "var(--ink)" }} axisLine={false} tickLine={false} />
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={byProject} margin={{ top: 8, right: 8, left: -12, bottom: 24 }}>
+                <XAxis
+                  dataKey="name" tick={{ fontSize: 11, fill: "var(--ink-soft)" }} axisLine={{ stroke: "var(--line)" }} tickLine={false}
+                  interval={0} angle={-25} textAnchor="end" height={40}
+                />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--ink-soft)" }} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{ fontFamily: "var(--font-body)", fontSize: 12, border: "1px solid var(--line)", borderRadius: 8 }}
                   formatter={(v: number) => [v, "Tâches"]}
                 />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                   {byProject.map((p) => <Cell key={p.id} fill={p.color} />)}
                 </Bar>
               </BarChart>
@@ -88,16 +94,19 @@ export default function ProjectsView({
             <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
               Répartition par statut
             </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={byStatus} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                <XAxis dataKey="label" tick={{ fontSize: 11.5, fill: "var(--ink-soft)" }} axisLine={{ stroke: "var(--line)" }} tickLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--ink-soft)" }} axisLine={false} tickLine={false} />
+            <ResponsiveContainer width="100%" height={220}>
+              <RadialBarChart data={byStatus} innerRadius="24%" outerRadius="100%" startAngle={180} endAngle={-180}>
+                <RadialBar dataKey="count" background={{ fill: "var(--line)" }} cornerRadius={6} />
                 <Tooltip
                   contentStyle={{ fontFamily: "var(--font-body)", fontSize: 12, border: "1px solid var(--line)", borderRadius: 8 }}
-                  formatter={(v: number) => [v, "Tâches"]}
+                  formatter={(v: number, _key: string, item: any) => [v, item.payload.label]}
                 />
-                <Bar dataKey="count" fill="var(--accent)" radius={[6, 6, 0, 0]} />
-              </BarChart>
+                <Legend
+                  iconSize={9} layout="vertical" verticalAlign="middle" align="right"
+                  wrapperStyle={{ fontSize: 11.5, color: "var(--ink-soft)" }}
+                  formatter={(_value, entry: any) => entry.payload.label}
+                />
+              </RadialBarChart>
             </ResponsiveContainer>
           </div>
         </div>
