@@ -6,7 +6,7 @@ import { sprintKeyFor, toISODate } from "./dateUtils";
 import { buildEstimatorSummary, createEstimatorState, estimate, type EstimateResult, type EstimatorState } from "./estimator";
 import Estimator, { EstimatorSummary } from "./components/Estimator";
 import { applyTheme, getInitialTheme, type Theme } from "./theme";
-import { generateSubtasks } from "./subtaskGenerator";
+import { createDefaultSubtasks } from "./subtaskGenerator";
 
 interface Project {
   id: string;
@@ -76,7 +76,7 @@ export default function App() {
       notes: finalNotes,
     }).select().single();
     if (error) { setErrorMsg(error.message); setStatus("error"); return; }
-    if (notes.trim()) await generateSubtasks(taskRow.id, titre.trim(), notes.trim());
+    await createDefaultSubtasks(taskRow.id);
     resetForm();
     setStatus("success");
   };
