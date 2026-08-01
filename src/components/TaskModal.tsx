@@ -35,7 +35,7 @@ export default function TaskModal({
   const blank: TaskDraft = {
     titre: "", chef: "", types: [], designer_ids: [], difficulte: null,
     projet_id: projects[0]?.id ?? null, charge: 1, date_livraison: toISODate(new Date()),
-    sprint: null, priorite: "moyenne", statut: "backlog", notes: "",
+    sprint: null, sprint_debut: null, priorite: "moyenne", statut: "backlog", notes: "",
   };
   const [form, setForm] = useState<TaskDraft>(() => {
     if (!initial) return blank;
@@ -67,7 +67,8 @@ export default function TaskModal({
     if (!form.titre.trim()) return;
     setSaving(true);
     const sprint = sprintKeyFor(form.date_livraison);
-    await onSave({ ...form, sprint, id: initial?.id });
+    const sprint_debut = form.sprint_debut ? sprintKeyFor(form.sprint_debut) : null;
+    await onSave({ ...form, sprint, sprint_debut, id: initial?.id });
     setSaving(false);
   };
 
@@ -174,6 +175,14 @@ export default function TaskModal({
               </select>
             </label>
           </div>
+
+          <label className="studio-field">
+            <span>Sprint de début (optionnel)</span>
+            <input type="date" value={form.sprint_debut ?? ""} onChange={(e) => set("sprint_debut", e.target.value || null)} />
+            <span style={{ fontSize: 11, color: "var(--ink-soft)", textTransform: "none", fontWeight: 400 }}>
+              À renseigner si la tâche s'étale sur plusieurs sprints — la charge sera répartie entre le sprint de début et le sprint de livraison.
+            </span>
+          </label>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <label className="studio-field">

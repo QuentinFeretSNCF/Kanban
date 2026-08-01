@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, Palmtree, Users, X } from "lucide-react";
 import type { Conge, Designer, Meeting, Project, Task } from "../types";
-import { taskChargeForDesignerInSprint, meetingChargeForDesignerInSprint, congeChargeForDesignerInSprint, effectiveCapacity } from "../capacity";
+import { taskChargeForDesignerInSprint, taskSprints, meetingChargeForDesignerInSprint, congeChargeForDesignerInSprint, effectiveCapacity } from "../capacity";
 import { addDays, getMonday, sprintLabel, toISODate } from "../dateUtils";
 import { Avatar, PriorityDot } from "./atoms";
 
@@ -45,7 +45,7 @@ export default function SprintsView({
       </div>
       <div className="studio-sprint-grid">
         {sprints.map((mondayISO) => {
-          const sprintTasks = tasks.filter((t) => t.sprint === mondayISO && (projetFilter === "all" || t.projet_id === projetFilter));
+          const sprintTasks = tasks.filter((t) => taskSprints(t).includes(mondayISO) && (projetFilter === "all" || t.projet_id === projetFilter));
           const isCurrent = mondayISO === toISODate(getMonday(new Date()));
           return (
             <div key={mondayISO} className="studio-sprint-card">
@@ -122,7 +122,10 @@ export default function SprintsView({
                       <PriorityDot id={t.priorite} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titre}</div>
-                        {p && <div style={{ fontSize: 10, color: p.color, marginTop: 1 }}>{p.name}</div>}
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 1 }}>
+                          {p && <span style={{ fontSize: 10, color: p.color }}>{p.name}</span>}
+                          {mondayISO !== t.sprint && <span style={{ fontSize: 9.5, color: "var(--ink-soft)", fontStyle: "italic" }}>sur plusieurs sprints</span>}
+                        </div>
                       </div>
                       {assigned[0] && <Avatar designer={assigned[0]} size={18} />}
                       {t.statut === "livre" && <CheckCircle2 size={13} color="#2E7D5B" />}

@@ -24,6 +24,7 @@ export interface TaskRow {
   charge: number;
   date_livraison: string | null;
   sprint: string | null;
+  sprint_debut: string | null;
   priorite: PrioriteId;
   statut: StatusId;
   notes: string;

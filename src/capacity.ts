@@ -1,5 +1,6 @@
 import type { Conge, Meeting, Task } from "./types";
 import { CAPACITY_PER_DESIGNER } from "./constants";
+import { addDays, toISODate } from "./dateUtils";
 
 /** Une tâche assignée à plusieurs designers répartit sa charge à parts égales entre eux. */
 export function taskShare(task: Task): number {
@@ -7,10 +8,32 @@ export function taskShare(task: Task): number {
   return task.charge / n;
 }
 
+/**
+ * Liste des sprints (lundis, ISO) traversés par la tâche : de "sprint_debut"
+ * (si renseigné) jusqu'à "sprint" (dérivé de la date de livraison). Sans
+ * sprint_debut, la tâche tient sur son seul sprint de livraison.
+ */
+export function taskSprints(task: Task): string[] {
+  const end = task.sprint;
+  if (!end) return [];
+  const start = task.sprint_debut && task.sprint_debut <= end ? task.sprint_debut : end;
+  const weeks: string[] = [];
+  let cur = start;
+  while (cur <= end) {
+    weeks.push(cur);
+    cur = toISODate(addDays(cur, 7));
+  }
+  return weeks;
+}
+
 export function taskChargeForDesignerInSprint(tasks: Task[], designerId: string, sprint: string): number {
   return tasks
-    .filter((t) => t.sprint === sprint && t.designer_ids.includes(designerId))
-    .reduce((s, t) => s + taskShare(t), 0);
+    .filter((t) => t.designer_ids.includes(designerId))
+    .reduce((s, t) => {
+      const sprints = taskSprints(t);
+      if (!sprints.includes(sprint)) return s;
+      return s + taskShare(t) / sprints.length;
+    }, 0);
 }
 
 export function meetingChargeForDesignerInSprint(meetings: Meeting[], designerId: string, sprint: string): number {

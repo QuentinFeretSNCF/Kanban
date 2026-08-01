@@ -30,6 +30,7 @@ create table if not exists tasks (
   charge numeric not null default 1,
   date_livraison date,
   sprint date,
+  sprint_debut date,
   priorite text not null default 'moyenne',
   statut text not null default 'backlog',
   notes text not null default '',
