@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Designer, Project, Task } from "../types";
 import { STATUSES, PRIORITIES } from "../constants";
+import { getMonday } from "../dateUtils";
 import { Avatar, ProjectTag } from "./atoms";
 
 const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -68,6 +69,8 @@ function MiniCalendar({ tasks, monthOffset, setMonthOffset }: { tasks: Task[]; m
   );
 }
 
+const DAY_LETTERS = ["D", "L", "M", "M", "J", "V", "S", "D"];
+
 function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects: Project[]; monthOffset: number }) {
   const now = new Date();
   const ref = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
@@ -76,6 +79,8 @@ function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects:
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const monthStartISO = isoDay(new Date(year, month, 1));
   const monthEndISO = isoDay(new Date(year, month, daysInMonth));
+  const todayISO = isoDay(now);
+  const todayDay = todayISO >= monthStartISO && todayISO <= monthEndISO ? now.getDate() : null;
 
   const rows = tasks
     .filter((t) => t.date_livraison && t.date_livraison >= monthStartISO && t.date_livraison <= monthEndISO)
@@ -85,26 +90,74 @@ function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects:
     return <div className="studio-empty-col">Aucune livraison ce mois-ci.</div>;
   }
 
+  // Regroupe les jours du mois par semaine (lundi → dimanche) pour l'en-tête.
+  const weekGroups: { startDay: number; length: number; label: string }[] = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const mondayISO = isoDay(getMonday(date));
+    const last = weekGroups[weekGroups.length - 1];
+    if (last && isoDay(getMonday(new Date(year, month, last.startDay))) === mondayISO) {
+      last.length += 1;
+    } else {
+      weekGroups.push({ startDay: d, length: 1, label: getMonday(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) });
+    }
+  }
+
+  const totalRows = 2 + rows.length; // en-tête semaines + en-tête jours + une ligne par tâche
+
   return (
     <div className="studio-gantt-scroll">
-      <div className="studio-gantt" style={{ gridTemplateColumns: `160px repeat(${daysInMonth}, minmax(22px, 1fr))` }}>
-        <div className="studio-gantt-corner" />
-        {Array.from({ length: daysInMonth }, (_, i) => (
-          <div key={i} className="studio-gantt-day-head">{i + 1}</div>
+      <div className="studio-gantt" style={{ gridTemplateColumns: `160px repeat(${daysInMonth}, minmax(26px, 1fr))` }}>
+        <div className="studio-gantt-corner" style={{ gridColumn: 1, gridRow: "1 / 3" }} />
+
+        {weekGroups.map((w, i) => (
+          <div key={i} className="studio-gantt-week-head" style={{ gridColumn: `${w.startDay + 1} / span ${w.length}`, gridRow: 1 }}>
+            Sem. du {w.label}
+          </div>
         ))}
-        {rows.map((t) => {
+
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const weekday = new Date(year, month, day).getDay();
+          const isWeekend = weekday === 0 || weekday === 6;
+          const isToday = day === todayDay;
+          return (
+            <div
+              key={i}
+              className={`studio-gantt-day-head ${isWeekend ? "weekend" : ""} ${isToday ? "today" : ""}`}
+              style={{ gridColumn: day + 1, gridRow: 2 }}
+            >
+              <span className="weekday">{DAY_LETTERS[weekday]}</span>
+              <span className="num">{day}</span>
+            </div>
+          );
+        })}
+
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const weekday = new Date(year, month, day).getDay();
+          if (weekday !== 0 && weekday !== 6) return null;
+          return <div key={`w${i}`} className="studio-gantt-col-tint" style={{ gridColumn: day + 1, gridRow: `1 / ${totalRows + 1}` }} />;
+        })}
+
+        {todayDay && (
+          <div className="studio-gantt-today-col" style={{ gridColumn: todayDay + 1, gridRow: `1 / ${totalRows + 1}` }} />
+        )}
+
+        {rows.map((t, rowIndex) => {
           const project = projects.find((p) => p.id === t.projet_id);
           const prio = PRIORITIES.find((p) => p.id === t.priorite)!;
           const deliveryDay = new Date(t.date_livraison + "T00:00:00").getDate();
           const startISO = t.sprint && t.sprint >= monthStartISO ? t.sprint : monthStartISO;
           const startDay = t.sprint ? new Date(Math.max(new Date(startISO + "T00:00:00").getTime(), new Date(monthStartISO + "T00:00:00").getTime())).getDate() : deliveryDay;
           const span = Math.max(1, deliveryDay - startDay + 1);
+          const gridRow = rowIndex + 3;
           return (
             <Fragment key={t.id}>
-              <div className="studio-gantt-label" title={t.titre}>{t.titre}</div>
+              <div className="studio-gantt-label" title={t.titre} style={{ gridColumn: 1, gridRow }}>{t.titre}</div>
               <div
                 className="studio-gantt-bar"
-                style={{ gridColumn: `${startDay + 1} / span ${span}`, background: `${(project?.color || prio.color)}30`, borderColor: project?.color || prio.color }}
+                style={{ gridColumn: `${startDay + 1} / span ${span}`, gridRow, background: `${(project?.color || prio.color)}30`, borderColor: project?.color || prio.color }}
                 title={`${t.titre} — livraison ${t.date_livraison}`}
               >
                 <span className="studio-dot" style={{ background: prio.color }} />

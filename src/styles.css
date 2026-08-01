@@ -158,11 +158,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .studio-minical-badge { position: absolute; bottom: 2px; right: 2px; background: var(--accent); color: #fff; font-size: 8.5px; font-family: var(--font-mono); font-weight: 700; min-width: 13px; height: 13px; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 2px; }
 
 .studio-gantt-scroll { overflow-x: auto; }
-.studio-gantt { display: grid; grid-auto-rows: 26px; align-items: center; row-gap: 4px; column-gap: 2px; min-width: 640px; }
-.studio-gantt-corner { position: sticky; left: 0; background: var(--panel); }
-.studio-gantt-day-head { text-align: center; font-size: 9px; color: var(--ink-soft); font-family: var(--font-mono); }
-.studio-gantt-label { position: sticky; left: 0; background: var(--panel); font-size: 11.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
-.studio-gantt-bar { height: 18px; border-radius: 5px; border: 1px solid; display: flex; align-items: center; justify-content: flex-end; padding: 0 6px; }
+.studio-gantt { display: grid; grid-auto-rows: 28px; align-items: center; row-gap: 6px; column-gap: 2px; min-width: 720px; position: relative; }
+.studio-gantt-corner { position: sticky; left: 0; background: var(--panel); z-index: 2; }
+.studio-gantt-week-head {
+  font-size: 10px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.3px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--line); align-self: end;
+}
+.studio-gantt-day-head { display: flex; flex-direction: column; align-items: center; gap: 2px; font-family: var(--font-mono); z-index: 1; }
+.studio-gantt-day-head .weekday { font-size: 8px; color: var(--ink-soft); text-transform: uppercase; opacity: 0.7; }
+.studio-gantt-day-head .num { font-size: 10.5px; color: var(--ink-soft); width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.studio-gantt-day-head.today .num { background: var(--accent); color: #fff; font-weight: 700; }
+.studio-gantt-day-head.today .weekday { color: var(--accent); font-weight: 700; }
+.studio-gantt-col-tint { align-self: stretch; background: var(--surface-neutral); border-radius: 4px; z-index: 0; }
+.studio-gantt-today-col { align-self: stretch; background: var(--accent-soft); border-left: 2px dashed var(--accent); border-right: 2px dashed var(--accent); z-index: 0; }
+.studio-gantt-label { position: sticky; left: 0; background: var(--panel); font-size: 11.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; z-index: 1; }
+.studio-gantt-bar { height: 20px; border-radius: 6px; border: 1.5px solid; display: flex; align-items: center; justify-content: flex-end; padding: 0 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); position: relative; z-index: 1; }
 
 .studio-auth-screen { position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--paper); padding: 20px; }
 .studio-auth-theme-toggle { position: absolute; top: 20px; right: 20px; }
