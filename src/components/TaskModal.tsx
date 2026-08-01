@@ -126,14 +126,11 @@ export default function TaskModal({
 
           <label className="studio-field">
             <span>Designer(s) assigné(s)</span>
-            <select
-              multiple
-              size={Math.min(designers.length || 1, 6)}
-              value={form.designer_ids}
-              onChange={(e) => set("designer_ids", Array.from(e.target.selectedOptions, (o) => o.value))}
-            >
-              {designers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
+            <MultiSelect
+              options={designers.map((d) => ({ id: d.id, label: d.name, color: d.color }))}
+              selected={form.designer_ids}
+              onToggle={(id) => toggleIn("designer_ids", id)}
+            />
           </label>
 
           <label className="studio-field">
