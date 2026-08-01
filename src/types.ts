@@ -68,5 +68,6 @@ export interface Filters {
   designerId: string;
   projetId: string;
   priorite: string;
+  epic: "all" | "epics" | "non-epics";
   search: string;
 }

@@ -4,7 +4,7 @@ import { PRIORITIES, STATUSES } from "../constants";
 import { toISODate } from "../dateUtils";
 import TaskCard from "./TaskCard";
 
-const EMPTY_FILTERS: Filters = { designerId: "all", projetId: "all", priorite: "all", search: "" };
+const EMPTY_FILTERS: Filters = { designerId: "all", projetId: "all", priorite: "all", epic: "all", search: "" };
 
 export default function KanbanView({
   tasks, designers, projects, filters, setFilters, onEdit, onDrop, onDragStart,
@@ -23,10 +23,12 @@ export default function KanbanView({
     if (filters.designerId !== "all" && !t.designer_ids.includes(filters.designerId)) return false;
     if (filters.projetId !== "all" && t.projet_id !== filters.projetId) return false;
     if (filters.priorite !== "all" && t.priorite !== filters.priorite) return false;
+    if (filters.epic === "epics" && !t.is_epic) return false;
+    if (filters.epic === "non-epics" && t.is_epic) return false;
     if (filters.search && !`${t.titre} ${t.chef}`.toLowerCase().includes(filters.search.toLowerCase())) return false;
     return true;
   });
-  const hasActiveFilters = filters.designerId !== "all" || filters.projetId !== "all" || filters.priorite !== "all" || filters.search !== "";
+  const hasActiveFilters = filters.designerId !== "all" || filters.projetId !== "all" || filters.priorite !== "all" || filters.epic !== "all" || filters.search !== "";
 
   return (
     <div>
@@ -50,6 +52,11 @@ export default function KanbanView({
         <select className="studio-select-sm" value={filters.priorite} onChange={(e) => setFilters({ ...filters, priorite: e.target.value })}>
           <option value="all">Toutes priorités</option>
           {PRIORITIES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+        </select>
+        <select className="studio-select-sm" value={filters.epic} onChange={(e) => setFilters({ ...filters, epic: e.target.value as Filters["epic"] })}>
+          <option value="all">Epics et tickets</option>
+          <option value="epics">Epics uniquement</option>
+          <option value="non-epics">Sans les epics</option>
         </select>
         {hasActiveFilters && (
           <button type="button" className="studio-btn-ghost studio-btn-reset" onClick={() => setFilters(EMPTY_FILTERS)}>
