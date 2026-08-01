@@ -199,7 +199,9 @@ export default function TaskModal({
                 onChange={(e) => set("difficulte", (e.target.value || null) as DifficulteId | null)}
               >
                 <option value="">—</option>
-                {DIFFICULTIES.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
+                {DIFFICULTIES.map((d) => (
+                  <option key={d.id} value={d.id} title={d.description}>{d.id} — {d.label} — {d.description}</option>
+                ))}
               </select>
             </label>
           </div>

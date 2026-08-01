@@ -23,14 +23,13 @@ export const PRIORITIES: { id: PrioriteId; label: string; color: string }[] = [
   { id: "basse", label: "Basse", color: "#6E8378" },
 ];
 
-export const DIFFICULTIES: { id: DifficulteId; label: string }[] = [
-  { id: "XS", label: "XS" },
-  { id: "S", label: "S" },
-  { id: "M", label: "M" },
-  { id: "L", label: "L" },
-  { id: "XL", label: "XL" },
-  { id: "XXL", label: "XXL" },
-  { id: "XXXL", label: "XXXL" },
+export const DIFFICULTIES: { id: DifficulteId; label: string; description: string }[] = [
+  { id: "XS", label: "Très facile", description: "Résolu en quelques minutes" },
+  { id: "S", label: "Facile", description: "Résolu en quelques heures" },
+  { id: "M", label: "Moyen", description: "Résolu entre un jour à deux jours" },
+  { id: "L", label: "Difficile", description: "Nécessite un cadrage, une coordination" },
+  { id: "XL", label: "Très difficile", description: "Long, versatile avec un risque d'évolution" },
+  { id: "XXL", label: "Dangereux", description: "Pour les sujets ambitieux sans cadrage" },
 ];
 
 export const DESIGNER_COLORS = ["#2B4570", "#3D6B5C", "#A85A2E", "#6B4A82", "#1D7A73", "#8C3B4A"];
