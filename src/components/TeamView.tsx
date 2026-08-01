@@ -1,8 +1,15 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from "recharts";
-import type { Conge, Designer, Meeting, Task } from "../types";
-import { taskChargeForDesignerInSprint, meetingChargeForDesignerInSprint, congeChargeForDesignerInSprint, effectiveCapacity } from "../capacity";
+import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { Conge, Designer, DifficulteId, Meeting, Task } from "../types";
+import { taskChargeForDesignerInSprint, taskShare, taskSprints, meetingChargeForDesignerInSprint, congeChargeForDesignerInSprint, effectiveCapacity } from "../capacity";
+import { DIFFICULTIES } from "../constants";
 import { getMonday, sprintLabel, toISODate } from "../dateUtils";
 import { Avatar } from "./atoms";
+
+const DIFFICULTY_COLORS: Record<DifficulteId, string> = {
+  XS: "#6E8378", S: "#8CA36B", M: "#C9A227", L: "#C98A2B", XL: "#C2632B", XXL: "#D6462E",
+};
+const NONE_COLOR = "var(--surface-neutral-border)";
+const DIFFICULTY_KEYS = [...DIFFICULTIES.map((d) => d.id), "none"] as const;
 
 export default function TeamView({
   tasks, designers, meetings, conges, onRenameDesigner,
@@ -20,7 +27,18 @@ export default function TeamView({
     const congeCharge = congeChargeForDesignerInSprint(conges, d.id, currentSprint);
     const capacity = effectiveCapacity(meetingCharge, congeCharge);
     const total = tasks.filter((t) => t.designer_ids.includes(d.id) && t.statut !== "livre").length;
-    return { name: d.name, charge, capacity, meetingCharge, congeCharge, total, color: d.color, id: d.id };
+
+    const byDifficulty: Record<string, number> = { none: 0 };
+    DIFFICULTIES.forEach((diff) => { byDifficulty[diff.id] = 0; });
+    tasks
+      .filter((t) => t.designer_ids.includes(d.id) && taskSprints(t).includes(currentSprint))
+      .forEach((t) => {
+        const key = t.difficulte ?? "none";
+        const sprints = taskSprints(t).length || 1;
+        byDifficulty[key] += taskShare(t) / sprints;
+      });
+
+    return { name: d.name, charge, capacity, meetingCharge, congeCharge, total, color: d.color, id: d.id, ...byDifficulty };
   });
 
   return (
@@ -29,24 +47,38 @@ export default function TeamView({
         Charge planifiée par designer pour le sprint en cours ({sprintLabel(currentSprint)}) — capacité de référence : 5j / semaine, réduite du temps de réunion et de congés.
       </div>
       <div className="studio-panel" style={{ marginBottom: 22 }}>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height={260}>
+          <ComposedChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
             <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--ink-soft)" }} axisLine={{ stroke: "var(--line)" }} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: "var(--ink-soft)" }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{ fontFamily: "var(--font-body)", fontSize: 12, border: "1px solid var(--line)", borderRadius: 8 }}
-              formatter={(v: number, key: string, item: any) => {
-                if (key === "charge") return [`${v} j (capacité ${item.payload.capacity}j, réunions ${item.payload.meetingCharge}j, congés ${item.payload.congeCharge}j)`, "Charge"];
-                return [v, key];
+              formatter={(v: number, key: string) => {
+                if (key === "capacité") return [`${v} j`, "Capacité"];
+                const diff = DIFFICULTIES.find((d) => d.id === key);
+                return [`${Math.round(v * 10) / 10} j`, diff ? `${diff.id} — ${diff.label}` : "Sans difficulté"];
               }}
             />
-            <Bar dataKey="charge" radius={[6, 6, 0, 0]}>
-              {data.map((d) => (
-                <Cell key={d.id} fill={d.charge > d.capacity ? "#D6462E" : d.color} />
-              ))}
-            </Bar>
-          </BarChart>
+            <Legend
+              formatter={(value: string) => {
+                const diff = DIFFICULTIES.find((d) => d.id === value);
+                return diff ? diff.id : value === "none" ? "Sans difficulté" : "Capacité";
+              }}
+              wrapperStyle={{ fontSize: 11.5 }}
+            />
+            {DIFFICULTY_KEYS.map((key, i) => (
+              <Bar
+                key={key}
+                dataKey={key}
+                name={key}
+                stackId="charge"
+                fill={key === "none" ? NONE_COLOR : DIFFICULTY_COLORS[key as DifficulteId]}
+                radius={i === DIFFICULTY_KEYS.length - 1 ? [6, 6, 0, 0] : undefined}
+              />
+            ))}
+            <Line dataKey="capacity" name="capacité" stroke="var(--ink)" strokeDasharray="4 3" strokeWidth={1.5} dot={{ r: 3 }} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
