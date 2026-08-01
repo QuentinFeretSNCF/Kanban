@@ -138,7 +138,7 @@ export default function TaskModal({
             {!addingProject ? (
               <div style={{ display: "flex", gap: 8 }}>
                 <select style={{ flex: 1 }} value={form.projet_id ?? ""} onChange={(e) => set("projet_id", e.target.value || null)}>
-                  {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {[...projects].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
                 <button type="button" onClick={() => setAddingProject(true)} className="studio-icon-btn" title="Ajouter un projet">
                   <Plus size={15} />
