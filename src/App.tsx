@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { CalendarDays, FolderKanban, GripVertical, LayoutGrid, LogOut, Plus, Users } from "lucide-react";
 import { supabase } from "./supabaseClient";
-import type { Conge, Designer, Filters, Meeting, Project, StatusId, Subtask, Task, TaskDraft, TaskRow } from "./types";
+import type { Conge, Designer, Filters, Meeting, PrioriteId, Project, StatusId, Subtask, Task, TaskDraft, TaskRow } from "./types";
 import { PROJECT_COLORS } from "./constants";
 import { applyTheme, getInitialTheme, type Theme } from "./theme";
 import { createDefaultSubtasks } from "./subtaskGenerator";
@@ -161,6 +161,17 @@ export default function App() {
     const { error } = await supabase.from("projects").update({ name }).eq("id", id);
     if (error) setErrorMsg(error.message);
     else setProjects((cur) => cur.map((p) => (p.id === id ? { ...p, name } : p)));
+  }, []);
+
+  /** Déplacer un projet vers une nouvelle priorité aligne aussi tous ses tickets existants. */
+  const setProjectPriority = useCallback(async (id: string, priorite: PrioriteId) => {
+    const { error } = await supabase.from("projects").update({ priorite }).eq("id", id);
+    if (error) { setErrorMsg(error.message); return; }
+    setProjects((cur) => cur.map((p) => (p.id === id ? { ...p, priorite } : p)));
+
+    const { error: tasksError } = await supabase.from("tasks").update({ priorite }).eq("projet_id", id);
+    if (tasksError) { setErrorMsg(tasksError.message); return; }
+    setTaskRows((cur) => cur.map((t) => (t.projet_id === id ? { ...t, priorite } : t)));
   }, []);
 
   const renameDesigner = useCallback(async (id: string, name: string) => {
@@ -374,7 +385,7 @@ export default function App() {
           )}
           {view === "calendrier" && <CalendarView tasks={tasks} designers={designers} projects={projects} onEdit={openEdit} />}
           {view === "projets" && (
-            <ProjectsView tasks={tasks} designers={designers} projects={projects} onAddProject={addProject} onRenameProject={renameProject} onEdit={openEdit} />
+            <ProjectsView tasks={tasks} designers={designers} projects={projects} onAddProject={addProject} onRenameProject={renameProject} onSetProjectPriority={setProjectPriority} onEdit={openEdit} />
           )}
           {view === "equipe" && <TeamView tasks={tasks} designers={designers} meetings={meetings} conges={conges} onRenameDesigner={renameDesigner} />}
         </>
