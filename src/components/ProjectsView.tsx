@@ -8,7 +8,7 @@ import { Avatar, PriorityDot } from "./atoms";
 const STATUS_COLORS = ["#8B5E3C", "#B8862B", "#4F6D7A", "#6B5B95", "#557153"];
 
 export default function ProjectsView({
-  tasks, designers, projects, onAddProject, onRenameProject, onSetProjectPriority, onEdit,
+  tasks, designers, projects, onAddProject, onRenameProject, onSetProjectPriority, onEdit, readOnly,
 }: {
   tasks: Task[];
   designers: Designer[];
@@ -17,6 +17,7 @@ export default function ProjectsView({
   onRenameProject: (id: string, name: string) => void;
   onSetProjectPriority: (id: string, priorite: PrioriteId) => void;
   onEdit: (task: Task) => void;
+  readOnly: boolean;
 }) {
   const [newName, setNewName] = useState("");
   const [draggedProjectId, setDraggedProjectId] = useState<string | null>(null);
@@ -125,24 +126,26 @@ export default function ProjectsView({
         </div>
       </div>
 
-      <div className="studio-toolbar">
-        <div className="studio-search" style={{ maxWidth: 340 }}>
-          <Plus size={14} color="var(--ink-soft)" />
-          <input
-            placeholder="Ajouter un nouveau projet…"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") addProject(); }}
-          />
+      {!readOnly && (
+        <div className="studio-toolbar">
+          <div className="studio-search" style={{ maxWidth: 340 }}>
+            <Plus size={14} color="var(--ink-soft)" />
+            <input
+              placeholder="Ajouter un nouveau projet…"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") addProject(); }}
+            />
+          </div>
+          <button className="studio-btn-primary" onClick={addProject}><Plus size={14} /> Ajouter</button>
         </div>
-        <button className="studio-btn-primary" onClick={addProject}><Plus size={14} /> Ajouter</button>
-      </div>
+      )}
 
       {grouped.map(({ prio, items }) => (
         <div
           key={prio.id}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => onDropOnPriority(e, prio.id)}
+          onDragOver={(e) => { if (!readOnly) e.preventDefault(); }}
+          onDrop={(e) => { if (!readOnly) onDropOnPriority(e, prio.id); }}
           style={{ marginBottom: 22 }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -153,7 +156,9 @@ export default function ProjectsView({
             <span style={{ fontSize: 11.5, color: "var(--ink-soft)", fontFamily: "var(--font-mono)" }}>{items.length}</span>
           </div>
           <div className="studio-projects-grid studio-projects-dropzone">
-            {items.length === 0 && <div className="studio-empty-col">Glisse un projet ici pour lui donner cette priorité.</div>}
+            {items.length === 0 && (
+              <div className="studio-empty-col">{readOnly ? "Aucun projet." : "Glisse un projet ici pour lui donner cette priorité."}</div>
+            )}
             {items.map((p) => {
               const pTasks = tasks.filter((t) => t.projet_id === p.id);
               const active = pTasks.filter((t) => t.statut !== "livre");
@@ -165,8 +170,8 @@ export default function ProjectsView({
                 <div
                   key={p.id}
                   className="studio-project-card"
-                  style={{ borderTopColor: p.color, opacity: draggedProjectId === p.id ? 0.5 : 1, cursor: "grab" }}
-                  draggable
+                  style={{ borderTopColor: p.color, opacity: draggedProjectId === p.id ? 0.5 : 1, cursor: readOnly ? "default" : "grab" }}
+                  draggable={!readOnly}
                   onDragStart={() => setDraggedProjectId(p.id)}
                   onDragEnd={() => setDraggedProjectId(null)}
                 >
@@ -174,7 +179,8 @@ export default function ProjectsView({
                     <input
                       className="studio-inline-name"
                       defaultValue={p.name}
-                      onBlur={(e) => { if (e.target.value.trim() && e.target.value !== p.name) onRenameProject(p.id, e.target.value.trim()); }}
+                      readOnly={readOnly}
+                      onBlur={(e) => { if (!readOnly && e.target.value.trim() && e.target.value !== p.name) onRenameProject(p.id, e.target.value.trim()); }}
                     />
                     <span style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
                   </div>

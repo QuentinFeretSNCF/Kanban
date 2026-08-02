@@ -21,6 +21,7 @@ export default function TaskModal({
   onDeleteSubtask,
   onReorderSubtasks,
   onOpenTask,
+  readOnly,
 }: {
   initial: Task | null;
   tasks: Task[];
@@ -35,6 +36,7 @@ export default function TaskModal({
   onDeleteSubtask: (id: string) => void;
   onReorderSubtasks: (orderedIds: string[]) => void;
   onOpenTask: (task: Task) => void;
+  readOnly: boolean;
 }) {
   const blank: TaskDraft = {
     titre: "", chef: "", types: [], designer_ids: [], difficulte: null,
@@ -111,6 +113,7 @@ export default function TaskModal({
         </div>
 
         <form id="task-form" onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, display: "contents" }}>
           <label className="studio-field">
             <span>Intitulé de la tâche</span>
             <input required value={form.titre} onChange={(e) => set("titre", e.target.value)} placeholder="Ex : Cadrage UX — espace client" />
@@ -267,10 +270,10 @@ export default function TaskModal({
                 {initial.subtasks.slice().sort((a, b) => a.position - b.position).map((s) => (
                   <div
                     key={s.id}
-                    draggable
+                    draggable={!readOnly}
                     onDragStart={() => setDraggedSubtaskId(s.id)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => dropSubtask(s.id)}
+                    onDragOver={(e) => { if (!readOnly) e.preventDefault(); }}
+                    onDrop={() => { if (!readOnly) dropSubtask(s.id); }}
                     onDragEnd={() => setDraggedSubtaskId(null)}
                     style={{ display: "flex", alignItems: "center", gap: 8, opacity: draggedSubtaskId === s.id ? 0.5 : 1 }}
                   >
@@ -297,20 +300,23 @@ export default function TaskModal({
               </div>
             )}
           </div>
+        </fieldset>
         </form>
         </div>
 
         <div className="studio-modal-footer">
-          {initial ? (
+          {!readOnly && initial ? (
             <button type="button" onClick={() => onDelete(initial.id)} className="studio-btn-ghost-danger">
               <Trash2 size={14} /> Supprimer
             </button>
           ) : <span />}
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" onClick={onClose} className="studio-btn-ghost">Annuler</button>
-            <button type="submit" form="task-form" className="studio-btn-primary" disabled={saving}>
-              {saving ? "Enregistrement…" : initial ? "Enregistrer" : "Créer la demande"}
-            </button>
+            <button type="button" onClick={onClose} className="studio-btn-ghost">{readOnly ? "Fermer" : "Annuler"}</button>
+            {!readOnly && (
+              <button type="submit" form="task-form" className="studio-btn-primary" disabled={saving}>
+                {saving ? "Enregistrement…" : initial ? "Enregistrer" : "Créer la demande"}
+              </button>
+            )}
           </div>
         </div>
       </div>

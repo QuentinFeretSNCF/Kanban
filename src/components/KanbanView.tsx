@@ -7,7 +7,7 @@ import TaskCard from "./TaskCard";
 const EMPTY_FILTERS: Filters = { designerId: "all", projetId: "all", priorite: "all", epic: "all", search: "" };
 
 export default function KanbanView({
-  tasks, designers, projects, filters, setFilters, onEdit, onDrop, onDragStart,
+  tasks, designers, projects, filters, setFilters, onEdit, onDrop, onDragStart, readOnly,
 }: {
   tasks: Task[];
   designers: Designer[];
@@ -17,6 +17,7 @@ export default function KanbanView({
   onEdit: (task: Task) => void;
   onDrop: (e: React.DragEvent, statusId: StatusId) => void;
   onDragStart: (e: React.DragEvent, id: string) => void;
+  readOnly: boolean;
 }) {
   const todayISO = toISODate(new Date());
   const filtered = tasks.filter((t) => {
@@ -75,8 +76,8 @@ export default function KanbanView({
             <div
               key={status.id}
               className="studio-column"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => onDrop(e, status.id)}
+              onDragOver={(e) => { if (!readOnly) e.preventDefault(); }}
+              onDrop={(e) => { if (!readOnly) onDrop(e, status.id); }}
             >
               <div className="studio-column-head">
                 <span>{status.label}</span>
@@ -92,6 +93,7 @@ export default function KanbanView({
                     project={projects.find((p) => p.id === t.projet_id)}
                     onEdit={onEdit}
                     onDragStart={onDragStart}
+                    readOnly={readOnly}
                     overdue={t.statut !== "livre" && !!t.date_livraison && t.date_livraison < todayISO}
                   />
                 ))}

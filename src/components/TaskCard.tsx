@@ -12,6 +12,7 @@ export default function TaskCard({
   project,
   onEdit,
   onDragStart,
+  readOnly,
   overdue,
 }: {
   task: Task;
@@ -20,6 +21,7 @@ export default function TaskCard({
   project?: Project | null;
   onEdit: (task: Task) => void;
   onDragStart: (e: React.DragEvent, id: string) => void;
+  readOnly: boolean;
   overdue: boolean;
 }) {
   const prio = PRIORITIES.find((p) => p.id === task.priorite) || PRIORITIES[1];
@@ -29,7 +31,7 @@ export default function TaskCard({
 
   return (
     <div
-      draggable
+      draggable={!readOnly}
       onDragStart={(e) => onDragStart(e, task.id)}
       onClick={() => onEdit(task)}
       className="studio-card"
