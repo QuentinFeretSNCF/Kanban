@@ -43,11 +43,11 @@ export default function KanbanView({
         </div>
         <select className="studio-select-sm" value={filters.designerId} onChange={(e) => setFilters({ ...filters, designerId: e.target.value })}>
           <option value="all">Tous les designers</option>
-          {designers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+          {[...designers].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
         <select className="studio-select-sm" value={filters.projetId} onChange={(e) => setFilters({ ...filters, projetId: e.target.value })}>
           <option value="all">Tous les projets</option>
-          {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {[...projects].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select className="studio-select-sm" value={filters.priorite} onChange={(e) => setFilters({ ...filters, priorite: e.target.value })}>
           <option value="all">Toutes priorités</option>
