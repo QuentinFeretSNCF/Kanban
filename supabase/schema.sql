@@ -94,9 +94,41 @@ create trigger tasks_set_updated_at
   before update on tasks
   for each row execute function set_updated_at();
 
--- Row Level Security : tout utilisateur authentifié (l'équipe design) peut
--- lire et modifier ces tables. Pas de séparation par utilisateur — c'est un
--- espace de travail d'équipe partagé, pas des données privées.
+-- Row Level Security : tout utilisateur authentifié (l'équipe design, et les
+-- chefs de projet/coordinateurs en lecture seule) peut lire ces tables.
+-- Seuls les comptes avec le rôle "editor" (table profiles) peuvent écrire.
+
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  role text not null default 'viewer' check (role in ('editor', 'viewer')),
+  created_at timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+create policy "users read own profile" on profiles for select using (auth.uid() = id);
+
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, role)
+  values (new.id, new.email, 'viewer')
+  on conflict (id) do nothing;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+create or replace function public.is_editor()
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'editor'
+  );
+$$ language sql stable;
 
 alter table designers enable row level security;
 alter table projects enable row level security;
@@ -106,19 +138,19 @@ alter table subtasks enable row level security;
 alter table meetings enable row level security;
 
 create policy "authenticated read designers" on designers for select using (auth.role() = 'authenticated');
-create policy "authenticated insert designers" on designers for insert with check (auth.role() = 'authenticated');
-create policy "authenticated update designers" on designers for update using (auth.role() = 'authenticated');
-create policy "authenticated delete designers" on designers for delete using (auth.role() = 'authenticated');
+create policy "authenticated insert designers" on designers for insert with check (is_editor());
+create policy "authenticated update designers" on designers for update using (is_editor());
+create policy "authenticated delete designers" on designers for delete using (is_editor());
 
 create policy "authenticated read projects" on projects for select using (auth.role() = 'authenticated');
-create policy "authenticated insert projects" on projects for insert with check (auth.role() = 'authenticated');
-create policy "authenticated update projects" on projects for update using (auth.role() = 'authenticated');
-create policy "authenticated delete projects" on projects for delete using (auth.role() = 'authenticated');
+create policy "authenticated insert projects" on projects for insert with check (is_editor());
+create policy "authenticated update projects" on projects for update using (is_editor());
+create policy "authenticated delete projects" on projects for delete using (is_editor());
 
 create policy "authenticated read tasks" on tasks for select using (auth.role() = 'authenticated');
-create policy "authenticated insert tasks" on tasks for insert with check (auth.role() = 'authenticated');
-create policy "authenticated update tasks" on tasks for update using (auth.role() = 'authenticated');
-create policy "authenticated delete tasks" on tasks for delete using (auth.role() = 'authenticated');
+create policy "authenticated insert tasks" on tasks for insert with check (is_editor());
+create policy "authenticated update tasks" on tasks for update using (is_editor());
+create policy "authenticated delete tasks" on tasks for delete using (is_editor());
 
 -- Formulaire public "demande-form" (déployé séparément, sans authentification) :
 -- lecture des projets pour le menu déroulant, et création de tâches limitée
@@ -127,25 +159,25 @@ create policy "anon read projects for public form" on projects for select using 
 create policy "anon insert backlog tasks from public form" on tasks for insert to anon with check (statut = 'backlog');
 
 create policy "authenticated read task_designers" on task_designers for select using (auth.role() = 'authenticated');
-create policy "authenticated insert task_designers" on task_designers for insert with check (auth.role() = 'authenticated');
-create policy "authenticated update task_designers" on task_designers for update using (auth.role() = 'authenticated');
-create policy "authenticated delete task_designers" on task_designers for delete using (auth.role() = 'authenticated');
+create policy "authenticated insert task_designers" on task_designers for insert with check (is_editor());
+create policy "authenticated update task_designers" on task_designers for update using (is_editor());
+create policy "authenticated delete task_designers" on task_designers for delete using (is_editor());
 
 create policy "authenticated read subtasks" on subtasks for select using (auth.role() = 'authenticated');
-create policy "authenticated insert subtasks" on subtasks for insert with check (auth.role() = 'authenticated');
-create policy "authenticated update subtasks" on subtasks for update using (auth.role() = 'authenticated');
-create policy "authenticated delete subtasks" on subtasks for delete using (auth.role() = 'authenticated');
+create policy "authenticated insert subtasks" on subtasks for insert with check (is_editor());
+create policy "authenticated update subtasks" on subtasks for update using (is_editor());
+create policy "authenticated delete subtasks" on subtasks for delete using (is_editor());
 
 create policy "authenticated read meetings" on meetings for select using (auth.role() = 'authenticated');
-create policy "authenticated insert meetings" on meetings for insert with check (auth.role() = 'authenticated');
-create policy "authenticated update meetings" on meetings for update using (auth.role() = 'authenticated');
-create policy "authenticated delete meetings" on meetings for delete using (auth.role() = 'authenticated');
+create policy "authenticated insert meetings" on meetings for insert with check (is_editor());
+create policy "authenticated update meetings" on meetings for update using (is_editor());
+create policy "authenticated delete meetings" on meetings for delete using (is_editor());
 
 alter table conges enable row level security;
 create policy "authenticated read conges" on conges for select using (auth.role() = 'authenticated');
-create policy "authenticated insert conges" on conges for insert with check (auth.role() = 'authenticated');
-create policy "authenticated update conges" on conges for update using (auth.role() = 'authenticated');
-create policy "authenticated delete conges" on conges for delete using (auth.role() = 'authenticated');
+create policy "authenticated insert conges" on conges for insert with check (is_editor());
+create policy "authenticated update conges" on conges for update using (is_editor());
+create policy "authenticated delete conges" on conges for delete using (is_editor());
 
 -- Realtime : pousser les changements de ces tables à tous les clients connectés.
 alter publication supabase_realtime add table designers, projects, tasks, task_designers, subtasks, meetings, conges;

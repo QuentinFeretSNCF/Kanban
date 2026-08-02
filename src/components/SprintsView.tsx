@@ -6,7 +6,7 @@ import { addDays, getMonday, sprintLabel, toISODate } from "../dateUtils";
 import { Avatar, PriorityDot } from "./atoms";
 
 export default function SprintsView({
-  tasks, designers, projects, meetings, conges, onEdit, onSetMeetingCharge, onSetCongeCharge,
+  tasks, designers, projects, meetings, conges, onEdit, onSetMeetingCharge, onSetCongeCharge, readOnly,
 }: {
   tasks: Task[];
   designers: Designer[];
@@ -16,6 +16,7 @@ export default function SprintsView({
   onEdit: (task: Task) => void;
   onSetMeetingCharge: (designerId: string, sprint: string, charge: number) => void;
   onSetCongeCharge: (designerId: string, sprint: string, charge: number) => void;
+  readOnly: boolean;
 }) {
   const [offset, setOffset] = useState(0);
   const [projetFilter, setProjetFilter] = useState("all");
@@ -90,6 +91,7 @@ export default function SprintsView({
                           <input
                             type="number" min={0} step={0.5}
                             value={meetingCharge}
+                            disabled={readOnly}
                             onChange={(e) => onSetMeetingCharge(d.id, mondayISO, Math.max(0, parseFloat(e.target.value) || 0))}
                             className="studio-meeting-input"
                           />
@@ -101,6 +103,7 @@ export default function SprintsView({
                           <input
                             type="number" min={0} step={0.5}
                             value={congeCharge}
+                            disabled={readOnly}
                             onChange={(e) => onSetCongeCharge(d.id, mondayISO, Math.max(0, parseFloat(e.target.value) || 0))}
                             className="studio-meeting-input"
                           />

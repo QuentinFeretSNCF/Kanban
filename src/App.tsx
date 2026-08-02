@@ -42,6 +42,8 @@ export default function App() {
 
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [role, setRole] = useState<"editor" | "viewer" | null>(null);
+  const readOnly = role !== "editor";
   const [dataLoading, setDataLoading] = useState(true);
   const [taskRows, setTaskRows] = useState<TaskRow[]>([]);
   const [taskDesignerLinks, setTaskDesignerLinks] = useState<TaskDesignerLink[]>([]);
@@ -76,6 +78,7 @@ export default function App() {
         { data: st, error: stErr },
         { data: mt, error: mtErr },
         { data: cg, error: cgErr },
+        { data: pr, error: prErr },
       ] = await Promise.all([
         supabase.from("designers").select("*").order("created_at"),
         supabase.from("projects").select("*").order("created_at"),
@@ -84,6 +87,7 @@ export default function App() {
         supabase.from("subtasks").select("*").order("position"),
         supabase.from("meetings").select("*"),
         supabase.from("conges").select("*"),
+        supabase.from("profiles").select("role").eq("id", session.user.id).maybeSingle(),
       ]);
       if (cancelled) return;
       const err = dErr || pErr || tErr || tdErr || stErr || mtErr || cgErr;
@@ -95,6 +99,8 @@ export default function App() {
       setSubtasks((st ?? []) as Subtask[]);
       setMeetings((mt ?? []) as Meeting[]);
       setConges((cg ?? []) as Conge[]);
+      // Pas de ligne "profiles" ou erreur → lecture seule par défaut, par sécurité.
+      setRole(!prErr && pr?.role === "editor" ? "editor" : "viewer");
       setDataLoading(false);
     })();
 
@@ -150,21 +156,24 @@ export default function App() {
   const showModal = creatingTask || modalTaskId !== null;
 
   const addProject = useCallback(async (name: string): Promise<string> => {
+    if (readOnly) throw new Error("Lecture seule");
     const color = PROJECT_COLORS[projects.length % PROJECT_COLORS.length];
     const { data, error } = await supabase.from("projects").insert({ name, color }).select().single();
     if (error) { setErrorMsg(error.message); throw error; }
     setProjects((cur) => upsertById(cur, data as Project));
     return (data as Project).id;
-  }, [projects.length]);
+  }, [projects.length, readOnly]);
 
   const renameProject = useCallback(async (id: string, name: string) => {
+    if (readOnly) return;
     const { error } = await supabase.from("projects").update({ name }).eq("id", id);
     if (error) setErrorMsg(error.message);
     else setProjects((cur) => cur.map((p) => (p.id === id ? { ...p, name } : p)));
-  }, []);
+  }, [readOnly]);
 
   /** Déplacer un projet vers une nouvelle priorité aligne aussi tous ses tickets existants. */
   const setProjectPriority = useCallback(async (id: string, priorite: PrioriteId) => {
+    if (readOnly) return;
     const { error } = await supabase.from("projects").update({ priorite }).eq("id", id);
     if (error) { setErrorMsg(error.message); return; }
     setProjects((cur) => cur.map((p) => (p.id === id ? { ...p, priorite } : p)));
@@ -172,13 +181,14 @@ export default function App() {
     const { error: tasksError } = await supabase.from("tasks").update({ priorite }).eq("projet_id", id);
     if (tasksError) { setErrorMsg(tasksError.message); return; }
     setTaskRows((cur) => cur.map((t) => (t.projet_id === id ? { ...t, priorite } : t)));
-  }, []);
+  }, [readOnly]);
 
   const renameDesigner = useCallback(async (id: string, name: string) => {
+    if (readOnly) return;
     const { error } = await supabase.from("designers").update({ name }).eq("id", id);
     if (error) setErrorMsg(error.message);
     else setDesigners((cur) => cur.map((d) => (d.id === id ? { ...d, name } : d)));
-  }, []);
+  }, [readOnly]);
 
   const syncTaskDesigners = useCallback(async (taskId: string, designerIds: string[]) => {
     const { error: delErr } = await supabase.from("task_designers").delete().eq("task_id", taskId);
@@ -192,6 +202,7 @@ export default function App() {
   }, []);
 
   const saveTask = useCallback(async (draft: TaskDraft) => {
+    if (readOnly) return;
     const { id, designer_ids } = draft;
     const rest: Omit<TaskRow, "id"> = {
       titre: draft.titre,
@@ -224,9 +235,10 @@ export default function App() {
     }
     setCreatingTask(false);
     setModalTaskId(null);
-  }, [syncTaskDesigners]);
+  }, [syncTaskDesigners, readOnly]);
 
   const deleteTask = useCallback(async (id: string) => {
+    if (readOnly) return;
     const { error } = await supabase.from("tasks").delete().eq("id", id);
     if (error) setErrorMsg(error.message);
     else {
@@ -236,43 +248,49 @@ export default function App() {
     }
     setCreatingTask(false);
     setModalTaskId(null);
-  }, []);
+  }, [readOnly]);
 
   const moveTask = useCallback(async (id: string, statut: StatusId) => {
+    if (readOnly) return;
     setTaskRows((cur) => cur.map((t) => (t.id === id ? { ...t, statut } : t)));
     const { error } = await supabase.from("tasks").update({ statut }).eq("id", id);
     if (error) setErrorMsg(error.message);
-  }, []);
+  }, [readOnly]);
 
   const addSubtask = useCallback(async (taskId: string, titre: string) => {
+    if (readOnly) return;
     const position = subtasks.filter((s) => s.task_id === taskId).length;
     const { data, error } = await supabase.from("subtasks").insert({ task_id: taskId, titre, position }).select().single();
     if (error) { setErrorMsg(error.message); return; }
     setSubtasks((cur) => upsertById(cur, data as Subtask));
-  }, [subtasks]);
+  }, [subtasks, readOnly]);
 
   const toggleSubtask = useCallback(async (id: string, fait: boolean) => {
+    if (readOnly) return;
     setSubtasks((cur) => cur.map((s) => (s.id === id ? { ...s, fait } : s)));
     const { error } = await supabase.from("subtasks").update({ fait }).eq("id", id);
     if (error) setErrorMsg(error.message);
-  }, []);
+  }, [readOnly]);
 
   const deleteSubtask = useCallback(async (id: string) => {
+    if (readOnly) return;
     const { error } = await supabase.from("subtasks").delete().eq("id", id);
     if (error) setErrorMsg(error.message);
     else setSubtasks((cur) => removeById(cur, id));
-  }, []);
+  }, [readOnly]);
 
   const reorderSubtasks = useCallback(async (orderedIds: string[]) => {
+    if (readOnly) return;
     const positionById = new Map(orderedIds.map((id, position) => [id, position]));
     setSubtasks((cur) => cur.map((s) => (positionById.has(s.id) ? { ...s, position: positionById.get(s.id)! } : s)));
     const { error } = await Promise.all(
       orderedIds.map((id, position) => supabase.from("subtasks").update({ position }).eq("id", id))
     ).then((results) => ({ error: results.find((r) => r.error)?.error ?? null }));
     if (error) setErrorMsg(error.message);
-  }, []);
+  }, [readOnly]);
 
   const setMeetingCharge = useCallback(async (designerId: string, sprint: string, charge: number) => {
+    if (readOnly) return;
     const existing = meetings.find((m) => m.designer_id === designerId && m.sprint === sprint);
     if (charge <= 0) {
       if (existing) {
@@ -293,9 +311,10 @@ export default function App() {
       if (error) { setErrorMsg(error.message); return; }
       setMeetings((cur) => upsertById(cur, data as Meeting));
     }
-  }, [meetings]);
+  }, [meetings, readOnly]);
 
   const setCongeCharge = useCallback(async (designerId: string, sprint: string, charge: number) => {
+    if (readOnly) return;
     const existing = conges.find((c) => c.designer_id === designerId && c.sprint === sprint);
     if (charge <= 0) {
       if (existing) {
@@ -316,7 +335,7 @@ export default function App() {
       if (error) { setErrorMsg(error.message); return; }
       setConges((cur) => upsertById(cur, data as Conge));
     }
-  }, [conges]);
+  }, [conges, readOnly]);
 
   const openNew = () => { setModalTaskId(null); setCreatingTask(true); };
   const openEdit = (task: Task) => { setCreatingTask(false); setModalTaskId(task.id); };
@@ -342,6 +361,7 @@ export default function App() {
             <h1>Le Studio — Kanban</h1>
             <p>{designers.length} designers · sprints d'une semaine</p>
           </div>
+          {!dataLoading && readOnly && <span className="studio-readonly-badge">Lecture seule</span>}
         </div>
 
         <div className="studio-tabs">
@@ -357,9 +377,11 @@ export default function App() {
         </div>
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button className="studio-btn-primary" onClick={openNew}>
-            <Plus size={15} /> Nouvelle demande
-          </button>
+          {!readOnly && (
+            <button className="studio-btn-primary" onClick={openNew}>
+              <Plus size={15} /> Nouvelle demande
+            </button>
+          )}
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <button className="studio-icon-btn-header" title={`Déconnecter ${session.user.email ?? ""}`} onClick={() => supabase.auth.signOut()}>
             <LogOut size={16} />
@@ -374,20 +396,20 @@ export default function App() {
           {view === "kanban" && (
             <KanbanView
               tasks={tasks} designers={designers} projects={projects} filters={filters} setFilters={setFilters}
-              onEdit={openEdit} onDrop={onDrop} onDragStart={onDragStart}
+              onEdit={openEdit} onDrop={onDrop} onDragStart={onDragStart} readOnly={readOnly}
             />
           )}
           {view === "sprints" && (
             <SprintsView
               tasks={tasks} designers={designers} projects={projects} meetings={meetings} conges={conges}
-              onEdit={openEdit} onSetMeetingCharge={setMeetingCharge} onSetCongeCharge={setCongeCharge}
+              onEdit={openEdit} onSetMeetingCharge={setMeetingCharge} onSetCongeCharge={setCongeCharge} readOnly={readOnly}
             />
           )}
           {view === "calendrier" && <CalendarView tasks={tasks} designers={designers} projects={projects} onEdit={openEdit} />}
           {view === "projets" && (
-            <ProjectsView tasks={tasks} designers={designers} projects={projects} onAddProject={addProject} onRenameProject={renameProject} onSetProjectPriority={setProjectPriority} onEdit={openEdit} />
+            <ProjectsView tasks={tasks} designers={designers} projects={projects} onAddProject={addProject} onRenameProject={renameProject} onSetProjectPriority={setProjectPriority} onEdit={openEdit} readOnly={readOnly} />
           )}
-          {view === "equipe" && <TeamView tasks={tasks} designers={designers} meetings={meetings} conges={conges} onRenameDesigner={renameDesigner} />}
+          {view === "equipe" && <TeamView tasks={tasks} designers={designers} meetings={meetings} conges={conges} onRenameDesigner={renameDesigner} readOnly={readOnly} />}
         </>
       )}
 
@@ -407,6 +429,7 @@ export default function App() {
           onDeleteSubtask={deleteSubtask}
           onReorderSubtasks={reorderSubtasks}
           onOpenTask={openEdit}
+          readOnly={readOnly}
         />
       )}
 

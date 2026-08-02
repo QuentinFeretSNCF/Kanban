@@ -12,13 +12,14 @@ const NONE_COLOR = "var(--surface-neutral-border)";
 const DIFFICULTY_KEYS = [...DIFFICULTIES.map((d) => d.id), "none"] as const;
 
 export default function TeamView({
-  tasks, designers, meetings, conges, onRenameDesigner,
+  tasks, designers, meetings, conges, onRenameDesigner, readOnly,
 }: {
   tasks: Task[];
   designers: Designer[];
   meetings: Meeting[];
   conges: Conge[];
   onRenameDesigner: (id: string, name: string) => void;
+  readOnly: boolean;
 }) {
   const currentSprint = toISODate(getMonday(new Date()));
   const data = designers.map((d) => {
@@ -96,7 +97,8 @@ export default function TeamView({
                 <input
                   className="studio-inline-name"
                   defaultValue={d.name}
-                  onBlur={(e) => { if (e.target.value.trim() && e.target.value !== d.name) onRenameDesigner(d.id, e.target.value.trim()); }}
+                  readOnly={readOnly}
+                  onBlur={(e) => { if (!readOnly && e.target.value.trim() && e.target.value !== d.name) onRenameDesigner(d.id, e.target.value.trim()); }}
                 />
                 <div style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 2 }}>
                   {stats.total} tâche{stats.total > 1 ? "s" : ""} active{stats.total > 1 ? "s" : ""} · {stats.charge}j / {stats.capacity}j ce sprint
