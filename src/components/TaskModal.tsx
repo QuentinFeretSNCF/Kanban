@@ -115,55 +115,6 @@ export default function TaskModal({
         <form id="task-form" onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, display: "contents" }}>
           <label className="studio-field">
-            <span>Intitulé de la tâche</span>
-            <input required value={form.titre} onChange={(e) => set("titre", e.target.value)} placeholder="Ex : Cadrage UX — espace client" />
-          </label>
-
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink)" }}>
-            <input
-              type="checkbox"
-              checked={form.is_epic}
-              onChange={(e) => set("is_epic", e.target.checked)}
-            />
-            Ceci est un epic (regroupe d'autres tickets)
-          </label>
-
-          {!form.is_epic && (
-            <label className="studio-field">
-              <span>Epic parent (optionnel)</span>
-              <select value={form.epic_id ?? ""} onChange={(e) => set("epic_id", e.target.value || null)}>
-                <option value="">Aucun</option>
-                {tasks.filter((t) => t.is_epic && t.id !== initial?.id).sort((a, b) => a.titre.localeCompare(b.titre, "fr")).map((e) => (
-                  <option key={e.id} value={e.id}>{e.titre}</option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          <label className="studio-field">
-            <span>Chef de projet (optionnel)</span>
-            <input value={form.chef} onChange={(e) => set("chef", e.target.value)} placeholder="Nom du chef de projet" />
-          </label>
-
-          <label className="studio-field">
-            <span>Type(s) de demande</span>
-            <MultiSelect
-              options={TYPES.map((t) => ({ id: t, label: t }))}
-              selected={form.types}
-              onToggle={(id) => toggleIn("types", id)}
-            />
-          </label>
-
-          <label className="studio-field">
-            <span>Designer(s) assigné(s)</span>
-            <MultiSelect
-              options={designers.map((d) => ({ id: d.id, label: d.name, color: d.color }))}
-              selected={form.designer_ids}
-              onToggle={(id) => toggleIn("designer_ids", id)}
-            />
-          </label>
-
-          <label className="studio-field">
             <span>Projet</span>
             {!addingProject ? (
               <div style={{ display: "flex", gap: 8 }}>
@@ -188,6 +139,55 @@ export default function TaskModal({
                 <button type="button" onClick={() => { setAddingProject(false); setNewProjectName(""); }} className="studio-icon-btn"><X size={15} /></button>
               </div>
             )}
+          </label>
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink)" }}>
+            <input
+              type="checkbox"
+              checked={form.is_epic}
+              onChange={(e) => set("is_epic", e.target.checked)}
+            />
+            Ceci est un epic (regroupe d'autres tickets)
+          </label>
+
+          {!form.is_epic && (
+            <label className="studio-field">
+              <span>Epic parent (optionnel)</span>
+              <select value={form.epic_id ?? ""} onChange={(e) => set("epic_id", e.target.value || null)}>
+                <option value="">Aucun</option>
+                {tasks.filter((t) => t.is_epic && t.id !== initial?.id).sort((a, b) => a.titre.localeCompare(b.titre, "fr")).map((e) => (
+                  <option key={e.id} value={e.id}>{e.titre}</option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <label className="studio-field">
+            <span>Intitulé de la tâche</span>
+            <input required value={form.titre} onChange={(e) => set("titre", e.target.value)} placeholder="Ex : Cadrage UX — espace client" />
+          </label>
+
+          <label className="studio-field">
+            <span>Chef de projet (optionnel)</span>
+            <input value={form.chef} onChange={(e) => set("chef", e.target.value)} placeholder="Nom du chef de projet" />
+          </label>
+
+          <label className="studio-field">
+            <span>Type(s) de demande</span>
+            <MultiSelect
+              options={TYPES.map((t) => ({ id: t, label: t }))}
+              selected={form.types}
+              onToggle={(id) => toggleIn("types", id)}
+            />
+          </label>
+
+          <label className="studio-field">
+            <span>Designer(s) assigné(s)</span>
+            <MultiSelect
+              options={designers.map((d) => ({ id: d.id, label: d.name, color: d.color }))}
+              selected={form.designer_ids}
+              onToggle={(id) => toggleIn("designer_ids", id)}
+            />
           </label>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
