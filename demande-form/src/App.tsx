@@ -62,7 +62,12 @@ export default function App() {
     setStatus("submitting");
     setErrorMsg(null);
     const finalNotes = [notes.trim(), buildEstimatorSummary(freshEstimate)].filter(Boolean).join("\n\n");
-    const { data: taskRow, error } = await supabase.from("tasks").insert({
+    // Génère l'id côté client : le rôle anon n'a pas de policy de lecture sur
+    // "tasks", donc un .select() après l'insert échouerait (RLS bloque la
+    // relecture de la ligne créée, même si l'insertion elle-même est permise).
+    const taskId = crypto.randomUUID();
+    const { error } = await supabase.from("tasks").insert({
+      id: taskId,
       titre: titre.trim(),
       chef: chef.trim(),
       types,
@@ -74,9 +79,9 @@ export default function App() {
       statut: "backlog",
       difficulte: null,
       notes: finalNotes,
-    }).select().single();
+    });
     if (error) { setErrorMsg(error.message); setStatus("error"); return; }
-    await createDefaultSubtasks(taskRow.id);
+    await createDefaultSubtasks(taskId);
     resetForm();
     setStatus("success");
   };

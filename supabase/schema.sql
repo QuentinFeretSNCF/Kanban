@@ -163,10 +163,21 @@ create policy "authenticated insert task_designers" on task_designers for insert
 create policy "authenticated update task_designers" on task_designers for update using (is_editor());
 create policy "authenticated delete task_designers" on task_designers for delete using (is_editor());
 
+-- Fonction SECURITY DEFINER : vérifie qu'une tâche est en Backlog sans
+-- exposer ses données (utilisée par la policy anon ci-dessous, le rôle
+-- anon n'ayant pas de policy SELECT sur "tasks").
+create or replace function public.is_backlog_task(check_task_id uuid)
+returns boolean as $$
+  select exists (
+    select 1 from tasks where id = check_task_id and statut = 'backlog'
+  );
+$$ language sql security definer stable set search_path = public;
+
 create policy "authenticated read subtasks" on subtasks for select using (auth.role() = 'authenticated');
 create policy "authenticated insert subtasks" on subtasks for insert with check (is_editor());
 create policy "authenticated update subtasks" on subtasks for update using (is_editor());
 create policy "authenticated delete subtasks" on subtasks for delete using (is_editor());
+create policy "anon insert subtasks on backlog tasks" on subtasks for insert to anon with check (is_backlog_task(task_id));
 
 create policy "authenticated read meetings" on meetings for select using (auth.role() = 'authenticated');
 create policy "authenticated insert meetings" on meetings for insert with check (is_editor());
