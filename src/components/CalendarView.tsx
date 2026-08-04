@@ -90,6 +90,31 @@ function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects:
     return <div className="studio-empty-col">Aucune livraison ce mois-ci.</div>;
   }
 
+  // Regroupe les tâches par projet, les groupes étant ordonnés par priorité
+  // du projet (haute → basse) puis par nom.
+  const PRIORITY_ORDER = PRIORITIES.map((p) => p.id);
+  const byProject = new Map<string, Task[]>();
+  rows.forEach((t) => {
+    const key = t.projet_id ?? "none";
+    if (!byProject.has(key)) byProject.set(key, []);
+    byProject.get(key)!.push(t);
+  });
+  const projectGroups = Array.from(byProject.entries())
+    .map(([key, items]) => ({ project: key === "none" ? null : projects.find((p) => p.id === key) ?? null, items }))
+    .sort((a, b) => {
+      const aPrio = a.project ? PRIORITY_ORDER.indexOf(a.project.priorite) : PRIORITY_ORDER.length;
+      const bPrio = b.project ? PRIORITY_ORDER.indexOf(b.project.priorite) : PRIORITY_ORDER.length;
+      if (aPrio !== bPrio) return aPrio - bPrio;
+      return (a.project?.name ?? "Sans projet").localeCompare(b.project?.name ?? "Sans projet", "fr");
+    });
+
+  type Entry = { kind: "group"; label: string; color: string } | { kind: "task"; task: Task };
+  const entries: Entry[] = [];
+  projectGroups.forEach(({ project, items }) => {
+    entries.push({ kind: "group", label: project?.name ?? "Sans projet", color: project?.color ?? "var(--ink-soft)" });
+    items.forEach((t) => entries.push({ kind: "task", task: t }));
+  });
+
   // Regroupe les jours du mois par semaine (lundi → dimanche) pour l'en-tête.
   const weekGroups: { startDay: number; length: number; label: string }[] = [];
   for (let d = 1; d <= daysInMonth; d++) {
@@ -103,7 +128,7 @@ function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects:
     }
   }
 
-  const totalRows = 2 + rows.length; // en-tête semaines + en-tête jours + une ligne par tâche
+  const totalRows = 2 + entries.length; // en-tête semaines + en-tête jours + une ligne par groupe/tâche
 
   return (
     <div className="studio-gantt-scroll">
@@ -144,7 +169,21 @@ function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects:
           <div className="studio-gantt-today-col" style={{ gridColumn: todayDay + 1, gridRow: `1 / ${totalRows + 1}` }} />
         )}
 
-        {rows.map((t, rowIndex) => {
+        {entries.map((entry, entryIndex) => {
+          const gridRow = entryIndex + 3;
+          if (entry.kind === "group") {
+            return (
+              <div
+                key={`group-${entryIndex}`}
+                className="studio-gantt-group-head"
+                style={{ gridColumn: `1 / ${daysInMonth + 2}`, gridRow }}
+              >
+                <span className="studio-dot" style={{ background: entry.color }} />
+                {entry.label}
+              </div>
+            );
+          }
+          const t = entry.task;
           const project = projects.find((p) => p.id === t.projet_id);
           const prio = PRIORITIES.find((p) => p.id === t.priorite)!;
           const deliveryDay = new Date(t.date_livraison + "T00:00:00").getDate();
@@ -152,7 +191,6 @@ function GanttChart({ tasks, projects, monthOffset }: { tasks: Task[]; projects:
           const startClamped = startCandidate < monthStartISO ? monthStartISO : startCandidate;
           const startDay = new Date(startClamped + "T00:00:00").getDate();
           const span = Math.max(1, deliveryDay - startDay + 1);
-          const gridRow = rowIndex + 3;
           return (
             <Fragment key={t.id}>
               <div className="studio-gantt-label" title={t.titre} style={{ gridColumn: 1, gridRow }}>{t.titre}</div>
