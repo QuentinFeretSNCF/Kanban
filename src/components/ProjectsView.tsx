@@ -60,6 +60,8 @@ export default function ProjectsView({
     [tasks]
   );
 
+  const activeTasksCount = tasks.filter((t) => t.statut !== "livre").length;
+
   const addProject = async () => {
     const name = newName.trim();
     if (!name) return;
@@ -80,7 +82,7 @@ export default function ProjectsView({
               Tâches au total
             </div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 34, color: "var(--ink)", marginTop: 4 }}>
-              {tasks.length}
+              {activeTasksCount}
             </div>
           </div>
 
