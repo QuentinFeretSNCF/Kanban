@@ -210,6 +210,15 @@ export default function ProjectsView({
                       )}
                     </div>
                   )}
+                  <button
+                    type="button"
+                    draggable={false}
+                    onClick={(e) => { e.stopPropagation(); setOpenProjectId(p.id); }}
+                    className="studio-btn-ghost"
+                    style={{ width: "100%", display: "flex", justifyContent: "center", marginTop: 12, fontSize: 11.5, padding: "6px 8px" }}
+                  >
+                    Voir toutes les tâches →
+                  </button>
                 </div>
               );
             })}
