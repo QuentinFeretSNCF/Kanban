@@ -177,6 +177,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .studio-gantt-today-col { align-self: stretch; background: var(--accent-soft); border-left: 2px dashed var(--accent); border-right: 2px dashed var(--accent); z-index: 0; }
 .studio-gantt-label { position: sticky; left: 0; background: var(--panel); font-size: 11.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; z-index: 1; }
 .studio-gantt-bar { height: 20px; border-radius: 6px; border: 1.5px solid; display: flex; align-items: center; justify-content: flex-end; padding: 0 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); position: relative; z-index: 1; }
+.studio-gantt-group-head {
+  display: flex; align-items: center; gap: 6px; position: sticky; left: 0; width: fit-content;
+  font-size: 10.5px; font-weight: 700; color: var(--ink); background: var(--surface-neutral);
+  padding: 3px 10px; border-radius: 999px; z-index: 1; margin-top: 4px;
+}
 
 .studio-auth-screen { position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--paper); padding: 20px; }
 .studio-auth-theme-toggle { position: absolute; top: 20px; right: 20px; }
