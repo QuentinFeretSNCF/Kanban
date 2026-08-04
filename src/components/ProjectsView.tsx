@@ -4,6 +4,7 @@ import { Bar, BarChart, Cell, Legend, RadialBar, RadialBarChart, ResponsiveConta
 import type { Designer, PrioriteId, Project, Task } from "../types";
 import { PRIORITIES, STATUSES } from "../constants";
 import { Avatar, PriorityDot } from "./atoms";
+import ProjectPanel from "./ProjectPanel";
 
 const STATUS_COLORS = ["#8B5E3C", "#B8862B", "#4F6D7A", "#6B5B95", "#557153"];
 
@@ -21,6 +22,7 @@ export default function ProjectsView({
 }) {
   const [newName, setNewName] = useState("");
   const [draggedProjectId, setDraggedProjectId] = useState<string | null>(null);
+  const [openProjectId, setOpenProjectId] = useState<string | null>(null);
 
   const sortedProjects = useMemo(
     () => [...projects].sort((a, b) => a.name.localeCompare(b.name, "fr")),
@@ -170,16 +172,18 @@ export default function ProjectsView({
                 <div
                   key={p.id}
                   className="studio-project-card"
-                  style={{ borderTopColor: p.color, opacity: draggedProjectId === p.id ? 0.5 : 1, cursor: readOnly ? "default" : "grab" }}
+                  style={{ borderTopColor: p.color, opacity: draggedProjectId === p.id ? 0.5 : 1, cursor: readOnly ? "pointer" : "grab" }}
                   draggable={!readOnly}
                   onDragStart={() => setDraggedProjectId(p.id)}
                   onDragEnd={() => setDraggedProjectId(null)}
+                  onClick={() => setOpenProjectId(p.id)}
                 >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                     <input
                       className="studio-inline-name"
                       defaultValue={p.name}
                       readOnly={readOnly}
+                      onClick={(e) => e.stopPropagation()}
                       onBlur={(e) => { if (!readOnly && e.target.value.trim() && e.target.value !== p.name) onRenameProject(p.id, e.target.value.trim()); }}
                     />
                     <span style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
@@ -196,7 +200,7 @@ export default function ProjectsView({
                   {active.length > 0 && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 12 }}>
                       {active.slice(0, 4).map((t) => (
-                        <div key={t.id} onClick={() => onEdit(t)} className="studio-sprint-row" style={{ padding: "5px 8px" }}>
+                        <div key={t.id} onClick={(e) => { e.stopPropagation(); onEdit(t); }} className="studio-sprint-row" style={{ padding: "5px 8px" }}>
                           <PriorityDot id={t.priorite} />
                           <span style={{ flex: 1, fontSize: 11.5, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.titre}</span>
                         </div>
@@ -212,6 +216,20 @@ export default function ProjectsView({
           </div>
         </div>
       ))}
+
+      {openProjectId && (() => {
+        const project = projects.find((p) => p.id === openProjectId);
+        if (!project) return null;
+        return (
+          <ProjectPanel
+            project={project}
+            tasks={tasks.filter((t) => t.projet_id === project.id)}
+            designers={designers}
+            onClose={() => setOpenProjectId(null)}
+            onEditTask={(t) => { setOpenProjectId(null); onEdit(t); }}
+          />
+        );
+      })()}
     </div>
   );
 }
